@@ -83,6 +83,11 @@ func renderTag(tag *Tag, tmpl *template.Template, wg *sync.WaitGroup) {
 func main() {
 	log.SetFlags(0)
 
+	tmpl, err := template.New(tagTmpl).Parse(tagTmpl)
+	if err != nil {
+		log.Fatalln("ERROR:", err)
+	}
+
 	listTagsOut := strings.Builder{}
 	listTagsCmd := exec.Command("lintian-explain-tags", "--list-tags")
 	listTagsCmd.Stderr = os.Stderr
@@ -104,23 +109,29 @@ func main() {
 	if err := jsonTagsCmd.Start(); err != nil {
 		log.Fatalln("ERROR", err)
 	}
-
-	var tags []Tag
-	if err := jsonTagsDecoder.Decode(&tags); err != nil {
-		log.Fatalln("ERROR:", err)
+	
+	// discard open bracket
+	if _, err := jsonTagsDecoder.Token(); err != nil {
+		log.Fatalln("ERROR", err)
 	}
 
-	tmpl, err := template.New(tagTmpl).Parse(tagTmpl)
-	if err != nil {
-		log.Fatalln("ERROR:", err)
-	}
 	wg := sync.WaitGroup{}
-	wg.Add(len(tags))
-	for i := range tags {
-		go renderTag(&tags[i], tmpl, &wg)
+	// while the array contains values
+	for jsonTagsDecoder.More() {
+		var tag Tag
+		if err := jsonTagsDecoder.Decode(&tag); err != nil {
+			log.Fatalln("ERROR:", err)
+		}
+		wg.Add(1)
+		go renderTag(&tag, tmpl, &wg)
 	}
-	wg.Wait()
 
+	// discard closing bracket
+	if _, err = jsonTagsDecoder.Token(); err != nil {
+		log.Fatal(err)
+	}
+
+	wg.Wait()
 	if err := jsonTagsCmd.Wait(); err != nil {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
