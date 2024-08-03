@@ -39,12 +39,15 @@ type TmplParams struct {
 
 var (
 	//go:embed tag.html.tmpl
-	tagTmpl   string
-	linkRegex = regexp.MustCompile(`\[([^]]+)\]\((\S+)\)`)
+	tagTmpl    string
+	linkRegex1 = regexp.MustCompile(`<(\S+)>`)
+	linkRegex2 = regexp.MustCompile(`\[([^]]+)\]\((\S+)\)`)
 )
 
 func convertLinks(str string) string {
-	return linkRegex.ReplaceAllString(str, `<a href="${2}">${1}</a>`)
+	str = linkRegex1.ReplaceAllString(str, `<a href="${1}">${1}</a>`)
+	str = linkRegex2.ReplaceAllString(str, `<a href="${2}">${1}</a>`)
+	return str
 }
 
 func tag2tmplParams(tag *Tag) *TmplParams {
@@ -60,11 +63,11 @@ func tag2tmplParams(tag *Tag) *TmplParams {
 	return tmplTag
 }
 
-func writeTag(tag *Tag, tmpl *template.Template, wg *sync.WaitGroup) {
+func renderTag(tag *Tag, tmpl *template.Template, wg *sync.WaitGroup) {
 	defer wg.Done()
 	dir, name := path.Split(tag.Name)
 	dirPath := filepath.Join(outDir, dir)
-	filePath := filepath.Join(dirPath, name)
+	filePath := filepath.Join(dirPath, name+".html")
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		panic(err)
 	}
@@ -114,7 +117,7 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(len(tags))
 	for i := range tags {
-		go writeTag(&tags[i], tmpl, &wg)
+		go renderTag(&tags[i], tmpl, &wg)
 	}
 	wg.Wait()
 
