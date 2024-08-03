@@ -22,12 +22,12 @@ const (
 )
 
 type Tag struct {
-	Name         string
-	Visibility   string
-	Explanation  string
+	Name         string   `json:"name"`
+	Visibility   string   `json:"visibility"`
+	Explanation  string   `json:"explanation"`
 	SeeAlso      []string `json:"see_also"`
 	RenamedFrom  []string `json:"renamed_from"`
-	Experimental bool
+	Experimental bool     `json:"experimental"`
 }
 
 type TmplParams struct {
