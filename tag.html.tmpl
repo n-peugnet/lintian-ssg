@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lintian Tag: {{ .Name }}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="" />
+  <link rel="icon" href="favicon.png">
+  <style>
+    body {
+      max-width: 700px;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1><code>{{ .Name }}</code></h1>
+  <p>{{ .ExplanationHTML }}</p>
+  <table>
+    <tr>
+      <td>Severity: </td>
+      <td><code>{{ .Visibility }}</code></td>
+    </tr>
+    <tr>
+      <td>Experimental: </td>
+      <td><code>{{ .Experimental }}</code></td>
+    </tr>
+    </tr>
+{{ if .RenamedFrom -}}
+      <td>Renamed from: </td>
+      <td><code>{{ .RenamedFromStr }}</code></td>
+    </tr>
+{{ end -}}
+  </table>
+{{ if .SeeAlso }}
+  <h2>See also</h2>
+  <ul>
+{{ range .SeeAlsoHTML -}}
+    <li>{{ . }}</li>
+{{ end -}}
+  </ul>
+{{ end }}
+</body>
+</html>
