@@ -133,7 +133,7 @@ func main() {
 	if err := listTagsCmd.Run(); err != nil {
 		log.Fatalln("ERROR:", err)
 	}
-	listTagsStr := listTagsOut.String()
+	listTagsStr := strings.TrimSpace(listTagsOut.String())
 	listTagsLines := strings.Split(listTagsStr, "\n")
 
 	jsonTagsArgs := append([]string{"--format=json"}, listTagsLines...)
