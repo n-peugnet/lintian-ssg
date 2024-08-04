@@ -56,6 +56,9 @@ var (
 
 func rootRelPath(dir string) string {
 	count := strings.Count(dir, "/")
+	if count == 0 {
+		return "./"
+	}
 	return strings.Repeat("../", count)
 }
 
