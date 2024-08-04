@@ -1,8 +1,10 @@
 # The Docker image that will be used to build your app
 image: golang:latest
 pages:
+  before_script:
+    - apt-get update
+    - apt-get install -y lintian
   script:
-    - apt-get update && apt-get install lintian
     - go build
     - ./lintian-ssg
   artifacts:
