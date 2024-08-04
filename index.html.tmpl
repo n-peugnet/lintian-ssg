@@ -8,7 +8,7 @@
   <meta name="description" content="{{ block "description" . }}Online explanation of all the lintian tags{{ end }}" />
   <link rel="icon" href="{{ .Root }}favicon.ico">
   <link rel="stylesheet" href="https://www.debian.org/debian.css">
-  <link rel="stylesheet" href="{{ .Root }}tag.css">
+  <link rel="stylesheet" href="{{ .Root }}main.css">
 </head>
 <body>
   <div id="header">
@@ -16,7 +16,7 @@
       <div id="logo">
         <a href="https://www.debian.org/" title="Debian Home"><img src="{{ .Root }}openlogo-50.svg" alt="Debian" width="50" height="61"></a>
       </div>
-      <p class="section"><a href="{{ .Root }}" title="Lintian tags explanations">LINTIAN</a></p>
+      <p class="section"><a href="{{ .Root }}index.html" title="Lintian tags explanations">LINTIAN</a></p>
       <div id="searchbox">
         <form action="{{ .Root }}" method="get" class="searchbox-form">
           <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
@@ -30,7 +30,7 @@
 {{ block "content" . }}
     <h1>Lintian tags explanation</h1>
     <p>This website displays the explanations of all the tags that lintian can produce.</p>
-    <form action="index.html" method="get" class="searchbox-form">
+    <form action="index.html" method="get" class="index searchbox-form">
       <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
       <input type="submit" value="Jump">
     </form>

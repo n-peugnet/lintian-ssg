@@ -73,8 +73,8 @@ var (
 	indexTmplStr string
 	//go:embed tag.html.tmpl
 	tagTmplStr string
-	//go:embed tag.css
-	tagCSS []byte
+	//go:embed main.css
+	mainCSS []byte
 	//go:embed openlogo-50.svg
 	logoSVG []byte
 	//go:embed favicon.ico
@@ -157,7 +157,7 @@ func writeFiles(files []File) error {
 
 func writeAssets() error {
 	return writeFiles([]File{
-		{"tag.css", bytes.NewReader(tagCSS)},
+		{"main.css", bytes.NewReader(mainCSS)},
 		{"openlogo-50.svg", bytes.NewReader(logoSVG)},
 		{"favicon.ico", bytes.NewReader(faviconICO)},
 	})
