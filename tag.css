@@ -16,3 +16,7 @@ code.warning {
 code.info, code.pedantic {
 	background-color: #C7EA3C;
 }
+
+#see-also p {
+	margin: 0;
+}

@@ -14,9 +14,11 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/renderer/html"
 )
 
 const (
@@ -57,8 +59,7 @@ var (
 	//go:embed favicon.ico
 	faviconICO []byte
 
-	linkRegex1 = regexp.MustCompile(`<(\S+)>`)
-	linkRegex2 = regexp.MustCompile(`\[([^]]+)\]\((\S+)\)`)
+	mdParser = goldmark.New(goldmark.WithRendererOptions(html.WithUnsafe()))
 )
 
 func rootRelPath(dir string) string {
@@ -69,25 +70,33 @@ func rootRelPath(dir string) string {
 	return strings.Repeat("../", count)
 }
 
-func convertLinks(str string) string {
-	str = linkRegex1.ReplaceAllString(str, `<a href="${1}">${1}</a>`)
-	str = linkRegex2.ReplaceAllString(str, `<a href="${2}">${1}</a>`)
-	return str
+func md2html(src string) (template.HTML, error) {
+	buf := bytes.Buffer{}
+	err := mdParser.Convert([]byte(src), &buf)
+	return template.HTML(buf.String()), err
 }
 
 func buildTmplParams(tag *Tag, tagDatalist string, dir string) *TmplParams {
-	tmplTag := &TmplParams{
-		Tag:             *tag,
-		TagDatalist:     template.HTML(tagDatalist),
-		ExplanationHTML: template.HTML(tag.Explanation),
-		RenamedFromStr:  strings.Join(tag.RenamedFrom, ", "),
-		Root:            rootRelPath(dir),
+	tmplParams := &TmplParams{
+		Tag:            *tag,
+		TagDatalist:    template.HTML(tagDatalist),
+		RenamedFromStr: strings.Join(tag.RenamedFrom, ", "),
+		Root:           rootRelPath(dir),
 	}
-	tmplTag.SeeAlsoHTML = make([]template.HTML, len(tag.SeeAlso))
+	html, err := md2html(tag.Explanation)
+	if err != nil {
+		log.Println("WARNING: convert markdown explanation:", err)
+	}
+	tmplParams.ExplanationHTML = html
+	tmplParams.SeeAlsoHTML = make([]template.HTML, len(tag.SeeAlso))
 	for i, str := range tag.SeeAlso {
-		tmplTag.SeeAlsoHTML[i] = template.HTML(convertLinks(str))
+		html, err := md2html(str)
+		if err != nil {
+			log.Printf("WARNING: convert markdown reference %d: %v", i, err)
+		}
+		tmplParams.SeeAlsoHTML[i] = template.HTML(html)
 	}
-	return tmplTag
+	return tmplParams
 }
 
 func renderTag(tag *Tag, tags string, tmpl *template.Template, wg *sync.WaitGroup) {
