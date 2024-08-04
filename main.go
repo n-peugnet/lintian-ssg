@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"html/template"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -19,7 +20,8 @@ import (
 )
 
 const (
-	outDir = "out"
+	outDir     = "out"
+	manualPath = "/usr/share/doc/lintian/lintian.html"
 )
 
 type Tag struct {
@@ -38,6 +40,11 @@ type TmplParams struct {
 	SeeAlsoHTML     []template.HTML
 	RenamedFromStr  string
 	Root            string
+}
+
+type File struct {
+	name    string
+	content io.Reader
 }
 
 var (
@@ -100,25 +107,40 @@ func renderTag(tag *Tag, tags string, tmpl *template.Template, wg *sync.WaitGrou
 	}
 }
 
-func writeAssets() error {
-	files := []struct {
-		name    string
-		content []byte
-	}{
-		{"tag.css", tagCSS},
-		{"openlogo-50.svg", logoSVG},
-		{"favicon.ico", faviconICO},
-	}
+func writeFiles(files []File) error {
 	for _, f := range files {
-		file, err := os.Create(filepath.Join(outDir, f.name))
+		path := filepath.Join(outDir, f.name)
+		dir, _ := filepath.Split(path)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+		file, err := os.Create(path)
 		if err != nil {
 			return err
 		}
-		if _, err := file.Write(f.content); err != nil {
+		defer file.Close()
+		if _, err := io.Copy(file, f.content); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func writeAssets() error {
+	return writeFiles([]File{
+		{"tag.css", bytes.NewReader(tagCSS)},
+		{"openlogo-50.svg", bytes.NewReader(logoSVG)},
+		{"favicon.ico", bytes.NewReader(faviconICO)},
+	})
+}
+
+func writeManual() error {
+	file, err := os.Open(manualPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return writeFiles([]File{{"manual/index.html", file}})
 }
 
 func main() {
@@ -177,7 +199,10 @@ func main() {
 	}
 
 	if err := writeAssets(); err != nil {
-		log.Fatalln("ERROR:", err)
+		log.Fatalln("ERROR: write assets:", err)
+	}
+	if err := writeManual(); err != nil {
+		log.Fatalln("ERROR: write manual:", err)
 	}
 
 	wg.Wait()
