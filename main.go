@@ -64,10 +64,7 @@ var (
 
 func rootRelPath(dir string) string {
 	count := strings.Count(dir, "/")
-	if count == 0 {
-		return "./"
-	}
-	return strings.Repeat("../", count)
+	return strings.Repeat("../", count + 1)
 }
 
 func md2html(src string) (template.HTML, error) {
@@ -102,7 +99,7 @@ func buildTmplParams(tag *Tag, tagDatalist string, dir string) *TmplParams {
 func renderTag(tag *Tag, tags string, tmpl *template.Template, wg *sync.WaitGroup) {
 	defer wg.Done()
 	dir, name := path.Split(tag.Name)
-	dirPath := filepath.Join(outDir, dir)
+	dirPath := filepath.Join(outDir, "tags", dir)
 	filePath := filepath.Join(dirPath, name+".html")
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		panic(err)

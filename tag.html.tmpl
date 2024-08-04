@@ -59,7 +59,7 @@
     form.onsubmit = (event) => {
       event.preventDefault()
       let form = event.target;
-      window.location = "{{ .Root }}" + form.elements.namedItem("q").value + ".html";
+      window.location = "{{ .Root }}tags/" + form.elements.namedItem("q").value + ".html";
     };
   </script>
 
