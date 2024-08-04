@@ -8,6 +8,13 @@ div#content {
 	width: 80%;
 }
 
+menu {
+	padding-left: 0;
+}
+menu > li {
+	list-style: none;
+}
+
 h1 > code {
 	padding: 0 .5rem;
 	line-height: 1.6rem;

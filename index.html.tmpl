@@ -34,6 +34,13 @@
       <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
       <input type="submit" value="Jump">
     </form>
+
+    <h2>All tags</h2>
+    <menu>
+{{- range .TagList }}
+      <li><a href="./tags/{{ . }}.html">{{ . }}</a>
+{{- end }}
+    </menu>
 {{ end }}
   </div>
 

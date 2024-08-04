@@ -52,6 +52,7 @@ type Tag struct {
 
 type TmplParams struct {
 	Root        string
+	TagList     []string
 	TagDatalist template.HTML
 }
 
@@ -172,13 +173,13 @@ func writeManual() error {
 	return writeFiles([]File{{"manual/index.html", file}})
 }
 
-func writeIndex(indexTmpl *template.Template, tagDatalist string) error {
+func writeIndex(indexTmpl *template.Template, tagList []string, tagDatalist string) error {
 	file, err := os.Create(filepath.Join(outDir, "index.html"))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	params := TmplParams{"./", template.HTML(tagDatalist)}
+	params := TmplParams{"./", tagList, template.HTML(tagDatalist)}
 	return indexTmpl.Execute(file, params)
 }
 
@@ -244,7 +245,7 @@ func main() {
 	if err := writeManual(); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
 	}
-	if err := writeIndex(indexTmpl, tagDatalist); err != nil {
+	if err := writeIndex(indexTmpl, listTagsLines, tagDatalist); err != nil {
 		log.Fatalln("ERROR: write index.html:", err)
 	}
 
