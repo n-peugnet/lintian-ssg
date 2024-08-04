@@ -14,7 +14,10 @@ code.error {
 code.warning {
 	background-color: #FFEB44;
 }
-code.info, code.pedantic {
+code.info {
+	background-color: #99A2FF;
+}
+code.pedantic {
 	background-color: #C7EA3C;
 }
 
