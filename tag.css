@@ -8,16 +8,11 @@ h1 > code {
 }
 
 code.error {
-	background-color: red;
-	color: white;
+	background-color: #FF6700;
 }
-
 code.warning {
-	background-color: yellow;
-	color: black;
+	background-color: #FFEB44;
 }
-
-code.info {
-	background-color: limegreen;
-	color: black;
+code.info, code.pedantic {
+	background-color: #C7EA3C;
 }
