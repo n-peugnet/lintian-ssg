@@ -8,6 +8,10 @@ div#content {
 	width: 80%;
 }
 
+a {
+	outline: revert;
+}
+
 menu {
 	padding-left: 0;
 }
@@ -31,6 +35,9 @@ code.info {
 }
 code.pedantic {
 	background-color: #C7EA3C;
+}
+code.classification {
+	background-color: #D0D0D0;
 }
 
 #see-also p {
