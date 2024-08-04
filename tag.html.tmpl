@@ -21,12 +21,12 @@
       </tr>
 {{- end }}
     </table>
-{{- if .SeeAlso }}
+
     <h2>See also</h2>
     <ul id="see-also">
 {{- range .SeeAlsoHTML }}
       <li>{{ . }}</li>
 {{- end }}
+      <li>List of <a href="https://udd.debian.org/lintian-tag.cgi?tag={{ .Name }}">all the affected packages</a>
     </ul>
-{{- end }}
 {{ end }}
