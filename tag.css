@@ -5,6 +5,7 @@ div#content {
 
 h1 > code {
 	padding: 0 .5rem;
+	line-height: 1.6rem;
 }
 
 code.error {
