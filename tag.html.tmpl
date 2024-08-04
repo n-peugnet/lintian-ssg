@@ -1,3 +1,4 @@
+{{ define "main" }}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +17,12 @@
         <a href="https://www.debian.org/" title="Debian Home"><img src="{{ .Root }}openlogo-50.svg" alt="Debian" width="50" height="61"></a>
       </div>
       <p class="section"><a href="/" title="Lintian tags explanations">LINTIAN</a></p>
+      <div id="searchbox">
+        <form action="{{ .Root }}" method="get" id="searchbox-form">
+          <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
+          <input type="submit" value="Jump">
+        </form>
+      </div>
     </div>
   </div>
   <div id="content">
@@ -46,5 +53,26 @@
     </ul>
 {{- end }}
   </div>
+
+  <script>
+    const form = document.getElementById("searchbox-form");
+    form.onsubmit = (event) => {
+      event.preventDefault()
+      let form = event.target;
+      window.location = "{{ .Root }}" + form.elements.namedItem("q").value + ".html";
+    };
+  </script>
+
+  {{ .TagDatalist }}
 </body>
 </html>
+{{ end }}
+
+
+{{ define "lintian-tags" }}
+<datalist id="lintian-tags">
+{{- range . }}
+  <option value="{{ . }}"></option>
+{{- end }}
+</datalist>
+{{ end }}

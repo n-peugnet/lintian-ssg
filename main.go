@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	_ "embed"
 	"encoding/json"
 	"errors"
@@ -32,6 +33,7 @@ type Tag struct {
 
 type TmplParams struct {
 	Tag
+	TagDatalist     template.HTML
 	ExplanationHTML template.HTML
 	SeeAlsoHTML     []template.HTML
 	RenamedFromStr  string
@@ -63,9 +65,10 @@ func convertLinks(str string) string {
 	return str
 }
 
-func buildTmplParams(tag *Tag, dir string) *TmplParams {
+func buildTmplParams(tag *Tag, tagDatalist string, dir string) *TmplParams {
 	tmplTag := &TmplParams{
 		Tag:             *tag,
+		TagDatalist:     template.HTML(tagDatalist),
 		ExplanationHTML: template.HTML(tag.Explanation),
 		RenamedFromStr:  strings.Join(tag.RenamedFrom, ", "),
 		Root:            rootRelPath(dir),
@@ -77,7 +80,7 @@ func buildTmplParams(tag *Tag, dir string) *TmplParams {
 	return tmplTag
 }
 
-func renderTag(tag *Tag, tmpl *template.Template, wg *sync.WaitGroup) {
+func renderTag(tag *Tag, tags string, tmpl *template.Template, wg *sync.WaitGroup) {
 	defer wg.Done()
 	dir, name := path.Split(tag.Name)
 	dirPath := filepath.Join(outDir, dir)
@@ -89,7 +92,7 @@ func renderTag(tag *Tag, tmpl *template.Template, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
-	if err := tmpl.Execute(file, buildTmplParams(tag, dir)); err != nil {
+	if err := tmpl.ExecuteTemplate(file, "main", buildTmplParams(tag, tags, dir)); err != nil {
 		panic(err)
 	}
 }
@@ -145,6 +148,10 @@ func main() {
 		log.Fatalln("ERROR:", err)
 	}
 
+	buf := bytes.Buffer{}
+	tmpl.ExecuteTemplate(&buf, "lintian-tags", listTagsLines)
+	tagDatalist := buf.String()
+
 	// discard open bracket
 	if _, err := jsonTagsDecoder.Token(); err != nil {
 		log.Fatalln("ERROR:", err)
@@ -158,7 +165,7 @@ func main() {
 			log.Fatalln("ERROR:", err)
 		}
 		wg.Add(1)
-		go renderTag(&tag, tmpl, &wg)
+		go renderTag(&tag, tagDatalist, tmpl, &wg)
 	}
 
 	// discard closing bracket
