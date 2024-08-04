@@ -43,6 +43,8 @@ var (
 	tagTmpl string
 	//go:embed tag.css
 	tagCSS []byte
+	//go:embed openlogo-50.svg
+	logoSVG []byte
 
 	linkRegex1 = regexp.MustCompile(`<(\S+)>`)
 	linkRegex2 = regexp.MustCompile(`\[([^]]+)\]\((\S+)\)`)
@@ -91,12 +93,21 @@ func renderTag(tag *Tag, tmpl *template.Template, wg *sync.WaitGroup) {
 }
 
 func writeAssets() error {
-	file, err := os.Create(filepath.Join(outDir, "tag.css"))
-	if err != nil {
-		return err
+	files := []struct {
+		name    string
+		content []byte
+	}{
+		{"tag.css", tagCSS},
+		{"openlogo-50.svg", logoSVG},
 	}
-	if _, err := file.Write(tagCSS); err != nil {
-		return err
+	for _, f := range files {
+		file, err := os.Create(filepath.Join(outDir, f.name))
+		if err != nil {
+			return err
+		}
+		if _, err := file.Write(f.content); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -6,12 +6,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="" />
   <link rel="stylesheet" href="{{ .Root }}tag.css">
+  <link rel="stylesheet" href="https://www.debian.org/debian.css">
 </head>
 <body>
-  <header>
-    <p class="section"><a href="/" title="Lintian tags explanations">LINTIAN</a></p>
-  </header>
-  <main>
+  <div id="header">
+    <div id="upperheader">
+      <div id="logo">
+        <a href="https://www.debian.org/" title="Debian Home"><img src="{{ .Root }}openlogo-50.svg" alt="Debian" width="50" height="61"></a>
+      </div>
+      <p class="section"><a href="/" title="Lintian tags explanations">LINTIAN</a></p>
+    </div>
+  </div>
+  <div id="content">
     <h1><code>{{ .Name }}</code></h1>
     <p>{{ .ExplanationHTML }}</p>
     <table>
@@ -38,6 +44,6 @@
 {{- end }}
     </ul>
 {{- end }}
-  </main>
+  </div>
 </body>
 </html>
