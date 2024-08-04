@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 package main
 
 import (
@@ -52,12 +51,16 @@ type Tag struct {
 }
 
 type TmplParams struct {
+	Root        string
+	TagDatalist template.HTML
+}
+
+type TagTmplParams struct {
 	Tag
-	TagDatalist     template.HTML
+	TmplParams
 	ExplanationHTML template.HTML
 	SeeAlsoHTML     []template.HTML
 	RenamedFromStr  string
-	Root            string
 }
 
 type File struct {
@@ -66,8 +69,10 @@ type File struct {
 }
 
 var (
+	//go:embed index.html.tmpl
+	indexTmplStr string
 	//go:embed tag.html.tmpl
-	tagTmpl string
+	tagTmplStr string
 	//go:embed tag.css
 	tagCSS []byte
 	//go:embed openlogo-50.svg
@@ -80,7 +85,7 @@ var (
 
 func rootRelPath(dir string) string {
 	count := strings.Count(dir, "/")
-	return strings.Repeat("../", count + 1)
+	return strings.Repeat("../", count+1)
 }
 
 func md2html(src string) (template.HTML, error) {
@@ -89,12 +94,14 @@ func md2html(src string) (template.HTML, error) {
 	return template.HTML(buf.String()), err
 }
 
-func buildTmplParams(tag *Tag, tagDatalist string, dir string) *TmplParams {
-	tmplParams := &TmplParams{
-		Tag:            *tag,
-		TagDatalist:    template.HTML(tagDatalist),
+func buildTmplParams(tag *Tag, tagDatalist string, dir string) *TagTmplParams {
+	tmplParams := &TagTmplParams{
+		Tag: *tag,
+		TmplParams: TmplParams{
+			Root:        rootRelPath(dir),
+			TagDatalist: template.HTML(tagDatalist),
+		},
 		RenamedFromStr: strings.Join(tag.RenamedFrom, ", "),
-		Root:           rootRelPath(dir),
 	}
 	html, err := md2html(tag.Explanation)
 	if err != nil {
@@ -124,7 +131,7 @@ func renderTag(tag *Tag, tags string, tmpl *template.Template, wg *sync.WaitGrou
 	if err != nil {
 		panic(err)
 	}
-	if err := tmpl.ExecuteTemplate(file, "main", buildTmplParams(tag, tags, dir)); err != nil {
+	if err := tmpl.Execute(file, buildTmplParams(tag, tags, dir)); err != nil {
 		panic(err)
 	}
 }
@@ -165,12 +172,23 @@ func writeManual() error {
 	return writeFiles([]File{{"manual/index.html", file}})
 }
 
+func writeIndex(indexTmpl *template.Template, tagDatalist string) error {
+	file, err := os.Create(filepath.Join(outDir, "index.html"))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	params := TmplParams{"./", template.HTML(tagDatalist)}
+	return indexTmpl.Execute(file, params)
+}
+
 func main() {
 	log.SetFlags(0)
 
-	tmpl, err := template.New(tagTmpl).Parse(tagTmpl)
+	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
+	tagTmpl, err := template.Must(indexTmpl.Clone()).Parse(tagTmplStr)
 	if err != nil {
-		log.Fatalln("ERROR:", err)
+		panic(err)
 	}
 
 	listTagsOut := strings.Builder{}
@@ -196,7 +214,7 @@ func main() {
 	}
 
 	buf := bytes.Buffer{}
-	tmpl.ExecuteTemplate(&buf, "lintian-tags", listTagsLines)
+	tagTmpl.ExecuteTemplate(&buf, "lintian-tags", listTagsLines)
 	tagDatalist := buf.String()
 
 	// discard open bracket
@@ -212,7 +230,7 @@ func main() {
 			log.Fatalln("ERROR:", err)
 		}
 		wg.Add(1)
-		go renderTag(&tag, tagDatalist, tmpl, &wg)
+		go renderTag(&tag, tagDatalist, tagTmpl, &wg)
 	}
 
 	// discard closing bracket
@@ -225,6 +243,9 @@ func main() {
 	}
 	if err := writeManual(); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
+	}
+	if err := writeIndex(indexTmpl, tagDatalist); err != nil {
+		log.Fatalln("ERROR: write index.html:", err)
 	}
 
 	wg.Wait()

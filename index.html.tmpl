@@ -1,0 +1,61 @@
+{{ block "layout" . }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ block "title" . }}Lintian Tags{{ end }}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="{{ block "description" . }}Online explanation of all the lintian tags{{ end }}" />
+  <link rel="icon" href="{{ .Root }}favicon.ico">
+  <link rel="stylesheet" href="https://www.debian.org/debian.css">
+  <link rel="stylesheet" href="{{ .Root }}tag.css">
+</head>
+<body>
+  <div id="header">
+    <div id="upperheader">
+      <div id="logo">
+        <a href="https://www.debian.org/" title="Debian Home"><img src="{{ .Root }}openlogo-50.svg" alt="Debian" width="50" height="61"></a>
+      </div>
+      <p class="section"><a href="{{ .Root }}" title="Lintian tags explanations">LINTIAN</a></p>
+      <div id="searchbox">
+        <form action="{{ .Root }}" method="get" class="searchbox-form">
+          <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
+          <input type="submit" value="Jump">
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="content">
+{{ block "content" . }}
+    <h1>Lintian tags explanation</h1>
+    <p>This website displays the explanations of all the tags that lintian can produce.</p>
+    <form action="index.html" method="get" class="searchbox-form">
+      <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
+      <input type="submit" value="Jump">
+    </form>
+{{ end }}
+  </div>
+
+  <script>
+    const forms = document.querySelectorAll(".searchbox-form")
+    for (const form of forms) {
+      form.onsubmit = (event) => {
+        event.preventDefault()
+        window.location = "{{ .Root }}tags/" + form.elements.namedItem("q").value + ".html";
+      }
+    };
+  </script>
+
+  {{ .TagDatalist }}
+</body>
+</html>
+{{ end }}
+
+{{ define "lintian-tags" }}
+<datalist id="lintian-tags">
+{{- range . }}
+  <option value="{{ . }}"></option>
+{{- end }}
+</datalist>
+{{ end }}
