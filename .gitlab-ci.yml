@@ -2,6 +2,7 @@
 image: golang:latest
 pages:
   script:
+    - apt-get update && apt-get install lintian
     - go build
     - ./lintian-ssg
   artifacts:
