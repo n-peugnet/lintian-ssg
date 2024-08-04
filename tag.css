@@ -2,3 +2,22 @@ div#content {
 	max-width: 700px;
 	padding: 0 2%;
 }
+
+h1 > code {
+	padding: 0 .5rem;
+}
+
+code.error {
+	background-color: red;
+	color: white;
+}
+
+code.warning {
+	background-color: yellow;
+	color: black;
+}
+
+code.info {
+	background-color: limegreen;
+	color: black;
+}
