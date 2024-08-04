@@ -35,14 +35,23 @@ type TmplParams struct {
 	ExplanationHTML template.HTML
 	SeeAlsoHTML     []template.HTML
 	RenamedFromStr  string
+	Root            string
 }
 
 var (
 	//go:embed tag.html.tmpl
-	tagTmpl    string
+	tagTmpl string
+	//go:embed tag.css
+	tagCSS []byte
+
 	linkRegex1 = regexp.MustCompile(`<(\S+)>`)
 	linkRegex2 = regexp.MustCompile(`\[([^]]+)\]\((\S+)\)`)
 )
+
+func rootRelPath(dir string) string {
+	count := strings.Count(dir, "/")
+	return strings.Repeat("../", count)
+}
 
 func convertLinks(str string) string {
 	str = linkRegex1.ReplaceAllString(str, `<a href="${1}">${1}</a>`)
@@ -50,11 +59,12 @@ func convertLinks(str string) string {
 	return str
 }
 
-func tag2tmplParams(tag *Tag) *TmplParams {
+func buildTmplParams(tag *Tag, dir string) *TmplParams {
 	tmplTag := &TmplParams{
 		Tag:             *tag,
 		ExplanationHTML: template.HTML(tag.Explanation),
 		RenamedFromStr:  strings.Join(tag.RenamedFrom, ", "),
+		Root:            rootRelPath(dir),
 	}
 	tmplTag.SeeAlsoHTML = make([]template.HTML, len(tag.SeeAlso))
 	for i, str := range tag.SeeAlso {
@@ -75,9 +85,20 @@ func renderTag(tag *Tag, tmpl *template.Template, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
-	if err := tmpl.Execute(file, tag2tmplParams(tag)); err != nil {
+	if err := tmpl.Execute(file, buildTmplParams(tag, dir)); err != nil {
 		panic(err)
 	}
+}
+
+func writeAssets() error {
+	file, err := os.Create(filepath.Join(outDir, "tag.css"))
+	if err != nil {
+		return err
+	}
+	if _, err := file.Write(tagCSS); err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
@@ -107,12 +128,12 @@ func main() {
 	}
 	jsonTagsDecoder := json.NewDecoder(jsonTagsOut)
 	if err := jsonTagsCmd.Start(); err != nil {
-		log.Fatalln("ERROR", err)
+		log.Fatalln("ERROR:", err)
 	}
-	
+
 	// discard open bracket
 	if _, err := jsonTagsDecoder.Token(); err != nil {
-		log.Fatalln("ERROR", err)
+		log.Fatalln("ERROR:", err)
 	}
 
 	wg := sync.WaitGroup{}
@@ -128,7 +149,11 @@ func main() {
 
 	// discard closing bracket
 	if _, err = jsonTagsDecoder.Token(); err != nil {
-		log.Fatal(err)
+		log.Fatalln("ERROR:", err)
+	}
+
+	if err := writeAssets(); err != nil {
+		log.Fatalln("ERROR:", err)
 	}
 
 	wg.Wait()
