@@ -7,38 +7,61 @@
   <meta name="description" content="" />
   <link rel="icon" href="favicon.png">
   <style>
-    body {
+    main {
       max-width: 700px;
       margin: auto;
+      padding: 0 2%;
+    }
+    p.section {
+      margin: 0;
+      padding: 0 5px 0 5px;
+      font-family: monospace;
+      line-height: 16px;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      position: absolute;
+      top: 0px;
+      left: 52px;
+      background-color: #c70036;
+    }
+    p.section a {
+      color: white;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <h1><code>{{ .Name }}</code></h1>
-  <p>{{ .ExplanationHTML }}</p>
-  <table>
-    <tr>
-      <td>Severity: </td>
-      <td><code>{{ .Visibility }}</code></td>
-    </tr>
-    <tr>
-      <td>Experimental: </td>
-      <td><code>{{ .Experimental }}</code></td>
-    </tr>
-    <tr>
-{{ if .RenamedFrom -}}
-      <td>Renamed from: </td>
-      <td><code>{{ .RenamedFromStr }}</code></td>
-    </tr>
-{{ end -}}
-  </table>
-{{ if .SeeAlso }}
-  <h2>See also</h2>
-  <ul>
-{{ range .SeeAlsoHTML -}}
-    <li>{{ . }}</li>
-{{ end -}}
-  </ul>
-{{ end }}
+  <header>
+    <p class="section"><a href="/" title="Lintian tags explanations">LINTIAN</a></p>
+  </header>
+  <main>
+    <h1><code>{{ .Name }}</code></h1>
+    <p>{{ .ExplanationHTML }}</p>
+    <table>
+      <tr>
+        <td>Severity: </td>
+        <td><code>{{ .Visibility }}</code></td>
+      </tr>
+      <tr>
+        <td>Experimental: </td>
+        <td><code>{{ .Experimental }}</code></td>
+      </tr>
+{{- if .RenamedFrom }}
+      <tr>
+        <td>Renamed from: </td>
+        <td><code>{{ .RenamedFromStr }}</code></td>
+      </tr>
+{{- end }}
+    </table>
+{{- if .SeeAlso }}
+    <h2>See also</h2>
+    <ul>
+{{- range .SeeAlsoHTML }}
+      <li>{{ . }}</li>
+{{- end }}
+    </ul>
+{{- end }}
+  </main>
 </body>
 </html>
