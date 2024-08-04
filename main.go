@@ -45,6 +45,8 @@ var (
 	tagCSS []byte
 	//go:embed openlogo-50.svg
 	logoSVG []byte
+	//go:embed favicon.ico
+	faviconICO []byte
 
 	linkRegex1 = regexp.MustCompile(`<(\S+)>`)
 	linkRegex2 = regexp.MustCompile(`\[([^]]+)\]\((\S+)\)`)
@@ -99,6 +101,7 @@ func writeAssets() error {
 	}{
 		{"tag.css", tagCSS},
 		{"openlogo-50.svg", logoSVG},
+		{"favicon.ico", faviconICO},
 	}
 	for _, f := range files {
 		file, err := os.Create(filepath.Join(outDir, f.name))
