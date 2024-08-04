@@ -1,4 +1,4 @@
-module salsa.debian.org/n-peugnet/lintian-ssg
+module github.com/n-peugnet/lintian-ssg
 
 go 1.18
 
