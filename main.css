@@ -33,6 +33,10 @@ a {
 	outline: revert; /* Add back the outline of links, removed by debian.css */
 }
 
+code {
+	font-size: 1.1em
+}
+
 menu {
 	padding-left: 0;
 }
@@ -42,8 +46,8 @@ menu > li {
 
 /* Colored tags header */
 h1 > code {
-	padding: .1rem .5rem;
-	line-height: 1.7rem;
+	padding: .06em .2em;
+	line-height: 1.3em;
 }
 
 code.error {
