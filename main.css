@@ -48,25 +48,26 @@ menu > li {
 h1 > code {
 	padding: .06em .2em;
 	line-height: 1.3em;
+	background-color: var(--bg-color)
 }
 
 code.error {
-	background-color: #FF6700;
+	--bg-color: #FF7741;
 }
 code.warning {
-	background-color: #FFEB44;
+	--bg-color: #FFEB44;
 }
 code.info {
-	background-color: #99A2FF;
+	--bg-color: #AAB2FF;
 }
 code.pedantic {
-	background-color: #C7EA3C;
+	--bg-color: #C7EA3C;
 }
 code.classification {
-	background-color: #D0D0D0;
+	--bg-color: #D0D0D0;
 }
 code.experimental {
-	background-color: #EE99EE;
+	background: repeating-linear-gradient(-45deg, #00000020, #00000020 10px, #0000 10px, #0000 20px ), var(--bg-color)
 }
 
 /* Compact see also list */
