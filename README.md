@@ -2,7 +2,7 @@
 
 A very simple static site generator to replace `lintian.debian.org`.
 
-    sudo apt install golang
+    sudo apt install golang lintian
     go build
     ./lintian-ssg
 
