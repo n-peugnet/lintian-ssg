@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+//go:generate sh -c "sed s/{{.version}}/$(git describe --tags --always)/ version.go.tmpl > version.go"
+
 package main
 
 import (
@@ -52,6 +54,7 @@ type Tag struct {
 
 type TmplParams struct {
 	Root        string
+	Version     string
 	TagList     []string
 	TagDatalist template.HTML
 }
@@ -81,6 +84,7 @@ var (
 	//go:embed favicon.ico
 	faviconICO []byte
 
+	version  = "v0.1.0"
 	mdParser = goldmark.New(goldmark.WithRendererOptions(html.WithUnsafe()))
 )
 
@@ -95,13 +99,10 @@ func md2html(src string) (template.HTML, error) {
 	return template.HTML(buf.String()), err
 }
 
-func buildTmplParams(tag *Tag, tagDatalist string, dir string) *TagTmplParams {
+func buildTmplParams(tag *Tag, params TmplParams) *TagTmplParams {
 	tmplParams := &TagTmplParams{
-		Tag: *tag,
-		TmplParams: TmplParams{
-			Root:        rootRelPath(dir),
-			TagDatalist: template.HTML(tagDatalist),
-		},
+		Tag:            *tag,
+		TmplParams:     params,
 		RenamedFromStr: strings.Join(tag.RenamedFrom, ", "),
 	}
 	html, err := md2html(tag.Explanation)
@@ -120,7 +121,7 @@ func buildTmplParams(tag *Tag, tagDatalist string, dir string) *TagTmplParams {
 	return tmplParams
 }
 
-func renderTag(tag *Tag, tags string, tmpl *template.Template, wg *sync.WaitGroup) {
+func renderTag(tag *Tag, params TmplParams, tmpl *template.Template, wg *sync.WaitGroup) {
 	defer wg.Done()
 	dir, name := path.Split(tag.Name)
 	dirPath := filepath.Join(outDir, "tags", dir)
@@ -132,7 +133,8 @@ func renderTag(tag *Tag, tags string, tmpl *template.Template, wg *sync.WaitGrou
 	if err != nil {
 		panic(err)
 	}
-	if err := tmpl.Execute(file, buildTmplParams(tag, tags, dir)); err != nil {
+	params.Root = rootRelPath(dir)
+	if err := tmpl.Execute(file, buildTmplParams(tag, params)); err != nil {
 		panic(err)
 	}
 }
@@ -173,13 +175,13 @@ func writeManual() error {
 	return writeFiles([]File{{"manual/index.html", file}})
 }
 
-func writeIndex(indexTmpl *template.Template, tagList []string, tagDatalist string) error {
+func writeIndex(indexTmpl *template.Template, params TmplParams) error {
 	file, err := os.Create(filepath.Join(outDir, "index.html"))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	params := TmplParams{"./", tagList, template.HTML(tagDatalist)}
+	params.Root = "./"
 	return indexTmpl.Execute(file, params)
 }
 
@@ -217,6 +219,11 @@ func main() {
 	buf := bytes.Buffer{}
 	tagTmpl.ExecuteTemplate(&buf, "lintian-tags", listTagsLines)
 	tagDatalist := buf.String()
+	params := TmplParams{
+		Version:     version,
+		TagList:     listTagsLines,
+		TagDatalist: template.HTML(tagDatalist),
+	}
 
 	// discard open bracket
 	if _, err := jsonTagsDecoder.Token(); err != nil {
@@ -231,7 +238,7 @@ func main() {
 			log.Fatalln("ERROR:", err)
 		}
 		wg.Add(1)
-		go renderTag(&tag, tagDatalist, tagTmpl, &wg)
+		go renderTag(&tag, params, tagTmpl, &wg)
 	}
 
 	// discard closing bracket
@@ -245,7 +252,7 @@ func main() {
 	if err := writeManual(); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
 	}
-	if err := writeIndex(indexTmpl, listTagsLines, tagDatalist); err != nil {
+	if err := writeIndex(indexTmpl, params); err != nil {
 		log.Fatalln("ERROR: write index.html:", err)
 	}
 
