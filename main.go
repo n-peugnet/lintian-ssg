@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//go:generate sh -c "sed s/{{.version}}/$(git describe --tags --always)/ version.go.tmpl > version.go"
+//go:generate sh -c "sed s/{{.version}}/$(git describe --tags --always --dirty)/ version.go.tmpl > version.go"
 
 package main
 
@@ -44,19 +44,21 @@ const (
 )
 
 type Tag struct {
-	Name         string   `json:"name"`
-	Visibility   string   `json:"visibility"`
-	Explanation  string   `json:"explanation"`
-	SeeAlso      []string `json:"see_also"`
-	RenamedFrom  []string `json:"renamed_from"`
-	Experimental bool     `json:"experimental"`
+	Name           string   `json:"name"`
+	Visibility     string   `json:"visibility"`
+	Explanation    string   `json:"explanation"`
+	SeeAlso        []string `json:"see_also"`
+	RenamedFrom    []string `json:"renamed_from"`
+	Experimental   bool     `json:"experimental"`
+	LintianVersion string   `json:"lintian_version"`
 }
 
 type TmplParams struct {
-	Root        string
-	Version     string
-	TagList     []string
-	TagDatalist template.HTML
+	Root           string
+	Version        string
+	VersionLintian string
+	TagList        []string
+	TagDatalist    template.HTML
 }
 
 type TagTmplParams struct {
@@ -236,6 +238,9 @@ func main() {
 		var tag Tag
 		if err := jsonTagsDecoder.Decode(&tag); err != nil {
 			log.Fatalln("ERROR:", err)
+		}
+		if params.VersionLintian == "" {
+			params.VersionLintian = tag.LintianVersion
 		}
 		wg.Add(1)
 		go renderTag(&tag, params, tagTmpl, &wg)
