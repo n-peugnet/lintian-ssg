@@ -1,3 +1,4 @@
+/* Global layout */
 html, body {
 	height: 100%;
 }
@@ -12,9 +13,10 @@ div#content {
 }
 
 div#spacer {
-	flex-grow: 1;
+	flex-grow: 1; /* Allows the footer to stay to the bottom */
 }
 
+/* Search boxes */
 #searchbox {
 	width: 80%;
 	max-width: 350px;
@@ -26,8 +28,9 @@ div#spacer {
 	width: calc(100% - 60px);
 }
 
+/* Basic elements */
 a {
-	outline: revert;
+	outline: revert; /* Add back the outline of links, removed by debian.css */
 }
 
 menu {
@@ -37,6 +40,7 @@ menu > li {
 	list-style: none;
 }
 
+/* Colored tags header */
 h1 > code {
 	padding: .1rem .5rem;
 	line-height: 1.7rem;
@@ -57,7 +61,11 @@ code.pedantic {
 code.classification {
 	background-color: #D0D0D0;
 }
+code.experimental {
+	background-color: #EE99EE;
+}
 
+/* Compact see also list */
 #see-also p {
 	margin: 0;
 }

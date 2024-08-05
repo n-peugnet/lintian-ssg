@@ -3,7 +3,11 @@
 {{ define "description" }}Explanation for the lintian tag {{ .Name }}{{ end }}
 
 {{ define "content" }}
-    <h1><code class="{{ .Visibility }}">{{ .Name }}</code></h1>
+    <h1>
+      <code class="{{ .Visibility }}{{ if .Experimental }} experimental{{ end }}">
+        {{ .Name }}
+      </code>
+    </h1>
     {{ .ExplanationHTML }}
     <table>
       <tr>
