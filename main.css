@@ -38,8 +38,8 @@ menu > li {
 }
 
 h1 > code {
-	padding: 0 .5rem;
-	line-height: 1.6rem;
+	padding: .1rem .5rem;
+	line-height: 1.7rem;
 }
 
 code.error {
