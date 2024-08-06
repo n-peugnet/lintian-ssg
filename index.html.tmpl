@@ -19,7 +19,7 @@
       <p class="section"><a href="{{ .Root }}index.html" title="Lintian tags explanations">LINTIAN</a></p>
       <div id="searchbox">
         <form action="{{ .Root }}" method="get" class="searchbox-form">
-          <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
+          <input type="search" name="q" list="lintian-tags-datalist" placeholder="lintian tag" required="" autocomplete="off">
           <input type="submit" value="Jump">
         </form>
       </div>
@@ -37,7 +37,7 @@
     <h1>Lintian tags explanation</h1>
     <p>This website displays the explanations of all the tags that lintian can produce.</p>
     <form action="index.html" method="get" class="index searchbox-form">
-      <input type="search" name="q" list="lintian-tags" placeholder="lintian tag" required="" autocomplete="off">
+      <input type="search" name="q" list="lintian-tags-datalist" placeholder="lintian tag" required="" autocomplete="off">
       <input type="submit" value="Jump">
     </form>
 
@@ -79,7 +79,7 @@
 {{ end }}
 
 {{ define "lintian-tags" }}
-<datalist id="lintian-tags">
+<datalist id="lintian-tags-datalist">
 {{- range . }}
   <option value="{{ . }}"></option>
 {{- end }}
