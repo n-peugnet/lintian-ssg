@@ -106,19 +106,19 @@ type File struct {
 }
 
 var (
-	//go:embed index.html.tmpl
+	//go:embed templates/index.html.tmpl
 	indexTmplStr string
-	//go:embed tag.html.tmpl
+	//go:embed templates/tag.html.tmpl
 	tagTmplStr string
-	//go:embed manual.html.tmpl
+	//go:embed templates/manual.html.tmpl
 	manualTmplStr string
-	//go:embed 404.html.tmpl
+	//go:embed templates/404.html.tmpl
 	e404TmplStr string
-	//go:embed main.css
+	//go:embed assets/main.css
 	mainCSS []byte
-	//go:embed openlogo-50.svg
+	//go:embed assets/openlogo-50.svg
 	logoSVG []byte
-	//go:embed favicon.ico
+	//go:embed assets/favicon.ico
 	faviconICO []byte
 
 	version  = ""
