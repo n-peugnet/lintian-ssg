@@ -35,6 +35,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/n-peugnet/lintian-ssg/ioutil"
 	"github.com/n-peugnet/lintian-ssg/markdown"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
@@ -86,6 +87,11 @@ type TmplParams struct {
 	TagDatalist    template.HTML
 }
 
+type ManualTmplParams struct {
+	TmplParams
+	Manual template.HTML
+}
+
 type TagTmplParams struct {
 	Tag
 	TmplParams
@@ -104,6 +110,8 @@ var (
 	indexTmplStr string
 	//go:embed tag.html.tmpl
 	tagTmplStr string
+	//go:embed manual.html.tmpl
+	manualTmplStr string
 	//go:embed main.css
 	mainCSS []byte
 	//go:embed openlogo-50.svg
@@ -214,33 +222,42 @@ func writeAssets() error {
 	})
 }
 
-func writeManual() error {
+func writeManual(tmpl *template.Template, params TmplParams) error {
 	file, err := os.Open(manualPath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	return writeFiles([]File{{"manual/index.html", file}})
+	reader := ioutil.NewBodyFilterReader(file)
+	body := bytes.Buffer{}
+	if _, err := io.Copy(&body, reader); err != nil {
+		return err
+	}
+	params.Root = "../"
+	manualParams := ManualTmplParams{params, template.HTML(body.String())}
+	out := bytes.Buffer{}
+	if err := tmpl.Execute(&out, manualParams); err != nil {
+		return err
+	}
+	return writeFiles([]File{{"manual/index.html", &out}})
 }
 
-func writeIndex(indexTmpl *template.Template, params TmplParams) error {
+func writeIndex(tmpl *template.Template, params TmplParams) error {
 	file, err := os.Create(filepath.Join(outDir, "index.html"))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 	params.Root = "./"
-	return indexTmpl.Execute(file, params)
+	return tmpl.Execute(file, params)
 }
 
 func main() {
 	log.SetFlags(0)
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
-	tagTmpl, err := template.Must(indexTmpl.Clone()).Parse(tagTmplStr)
-	if err != nil {
-		panic(err)
-	}
+	tagTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(tagTmplStr))
+	manualTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(manualTmplStr))
 
 	listTagsOut := strings.Builder{}
 	listTagsCmd := exec.Command("lintian-explain-tags", "--list-tags")
@@ -300,7 +317,7 @@ func main() {
 	if err := writeAssets(); err != nil {
 		log.Fatalln("ERROR: write assets:", err)
 	}
-	if err := writeManual(); err != nil {
+	if err := writeManual(manualTmpl, params); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
 	}
 	if err := writeIndex(indexTmpl, params); err != nil {
