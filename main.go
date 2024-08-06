@@ -34,8 +34,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/n-peugnet/lintian-ssg/markdown"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/util"
 )
 
 const (
@@ -87,7 +91,27 @@ var (
 	faviconICO []byte
 
 	version  = "v0.1.0"
-	mdParser = goldmark.New(goldmark.WithRendererOptions(html.WithUnsafe()))
+	mdParser = goldmark.New(
+		goldmark.WithParser(parser.NewParser(
+			parser.WithBlockParsers(
+				// adapted from parser.DefaultBlockParsers(), with headings removed
+				util.Prioritized(parser.NewThematicBreakParser(), 200),
+				util.Prioritized(parser.NewListParser(), 300),
+				util.Prioritized(parser.NewListItemParser(), 400),
+				util.Prioritized(markdown.NewAnyIndentCodeBlockParser(), 500),
+				util.Prioritized(parser.NewFencedCodeBlockParser(), 700),
+				util.Prioritized(parser.NewBlockquoteParser(), 800),
+				util.Prioritized(parser.NewHTMLBlockParser(), 900),
+				util.Prioritized(parser.NewParagraphParser(), 1000),
+			),
+			parser.WithInlineParsers(parser.DefaultInlineParsers()...),
+			parser.WithParagraphTransformers(parser.DefaultParagraphTransformers()...),
+		)),
+		goldmark.WithRendererOptions(renderer.WithNodeRenderers(
+			util.Prioritized(markdown.NewIndentedCodeBlockRenderer(), 500),
+		)),
+		goldmark.WithRendererOptions(html.WithUnsafe()),
+	)
 )
 
 func rootRelPath(dir string) string {
