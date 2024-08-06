@@ -11,3 +11,12 @@ go test ./... # optionally, to run tests
 ```
 
 The result sould be in the `out` directory.
+
+## Recommended Apache config
+
+```apache
+# For a more friendly 404 error page
+ErrorDocument 404 /404.html
+# To allow access .html files without their extension
+Options +MultiViews
+```
