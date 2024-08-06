@@ -4,8 +4,9 @@ A very simple static site generator to replace `lintian.debian.org`.
 
 ```sh
 sudo apt install golang lintian
-go generate # to include lintian-ssg version, only from a git checkout
+go generate   # to include lintian-ssg version, only from a git checkout
 go build
+go test ./... # optionally, to run tests
 ./lintian-ssg
 ```
 
