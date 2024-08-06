@@ -24,6 +24,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -55,35 +56,15 @@ type Screen struct {
 }
 
 func (s Screen) AdvocatesHTML() template.HTML {
-	buf := bytes.Buffer{}
-	joined := strings.Join(s.Advocates, ", ")
-	err := mdParser.Convert([]byte(joined), &buf)
-	if err != nil {
-		log.Println("WARNING: converting screen advocates markdown:", err)
-		return template.HTML(joined)
-	}
-	return template.HTML(buf.String())
+	return md2htmlWarn(strings.Join(s.Advocates, ", "), "screen advocates")
 }
 
 func (s Screen) ReasonHTML() template.HTML {
-	buf := bytes.Buffer{}
-	err := mdParser.Convert([]byte(s.Reason), &buf)
-	if err != nil {
-		log.Println("WARNING: converting screen reason markdown:", err)
-		return template.HTML(s.Reason)
-	}
-	return template.HTML(buf.String())
+	return md2htmlWarn(s.Reason, "screen reason")
 }
 
 func (s Screen) SeeAlsoHTML() template.HTML {
-	buf := bytes.Buffer{}
-	joined := "See also: " + strings.Join(s.SeeAlso, ", ")
-	err := mdParser.Convert([]byte(joined), &buf)
-	if err != nil {
-		log.Println("WARNING: converting screen see_also markdown:", err)
-		return template.HTML(joined)
-	}
-	return template.HTML(buf.String())
+	return md2htmlWarn("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also")
 }
 
 type Tag struct {
@@ -165,24 +146,25 @@ func md2html(src string) (template.HTML, error) {
 	return template.HTML(buf.String()), err
 }
 
+func md2htmlWarn(src string, ctx string) template.HTML {
+	html, err := md2html(src)
+	if err != nil {
+		log.Printf("WARNING: convert markdown %s: %v", err, ctx)
+		return template.HTML(src)
+	}
+	return html
+}
+
 func buildTmplParams(tag *Tag, params TmplParams) *TagTmplParams {
 	tmplParams := &TagTmplParams{
 		Tag:            *tag,
 		TmplParams:     params,
 		RenamedFromStr: strings.Join(tag.RenamedFrom, ", "),
 	}
-	html, err := md2html(tag.Explanation)
-	if err != nil {
-		log.Println("WARNING: convert markdown explanation:", err)
-	}
-	tmplParams.ExplanationHTML = html
+	tmplParams.ExplanationHTML = md2htmlWarn(tag.Explanation, "explanation")
 	tmplParams.SeeAlsoHTML = make([]template.HTML, len(tag.SeeAlso))
 	for i, str := range tag.SeeAlso {
-		html, err := md2html(str)
-		if err != nil {
-			log.Printf("WARNING: convert markdown reference %d: %v", i, err)
-		}
-		tmplParams.SeeAlsoHTML[i] = template.HTML(html)
+		tmplParams.SeeAlsoHTML[i] = md2htmlWarn(str, fmt.Sprintf("reference %d", i))
 	}
 	return tmplParams
 }
