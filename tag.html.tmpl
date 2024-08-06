@@ -26,6 +26,20 @@
 {{- end }}
     </table>
 
+{{ if .Screens }}
+    <h2>Screens</h2>
+    <dl>
+{{- range .Screens }}
+      <dt>{{ .Name }}</dt>
+      <dd>
+        {{ .ReasonHTML }}
+        {{ .AdvocatesHTML }}
+        {{ .SeeAlsoHTML }}
+      </dd>
+{{- end }}
+    </dl>
+{{ end }}
+
     <h2>See also</h2>
     <ul id="see-also">
 {{- range .SeeAlsoHTML }}

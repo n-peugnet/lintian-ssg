@@ -47,6 +47,45 @@ const (
 	manualPath = "/usr/share/doc/lintian/lintian.html"
 )
 
+type Screen struct {
+	Advocates []string `json:"advocates"`
+	Name      string   `json:"name"`
+	Reason    string   `json:"reason"`
+	SeeAlso   []string `json:"see_also"`
+}
+
+func (s Screen) AdvocatesHTML() template.HTML {
+	buf := bytes.Buffer{}
+	joined := strings.Join(s.Advocates, ", ")
+	err := mdParser.Convert([]byte(joined), &buf)
+	if err != nil {
+		log.Println("WARNING: converting screen advocates markdown:", err)
+		return template.HTML(joined)
+	}
+	return template.HTML(buf.String())
+}
+
+func (s Screen) ReasonHTML() template.HTML {
+	buf := bytes.Buffer{}
+	err := mdParser.Convert([]byte(s.Reason), &buf)
+	if err != nil {
+		log.Println("WARNING: converting screen reason markdown:", err)
+		return template.HTML(s.Reason)
+	}
+	return template.HTML(buf.String())
+}
+
+func (s Screen) SeeAlsoHTML() template.HTML {
+	buf := bytes.Buffer{}
+	joined := "See also: " + strings.Join(s.SeeAlso, ", ")
+	err := mdParser.Convert([]byte(joined), &buf)
+	if err != nil {
+		log.Println("WARNING: converting screen see_also markdown:", err)
+		return template.HTML(joined)
+	}
+	return template.HTML(buf.String())
+}
+
 type Tag struct {
 	Name           string   `json:"name"`
 	Visibility     string   `json:"visibility"`
@@ -55,6 +94,7 @@ type Tag struct {
 	RenamedFrom    []string `json:"renamed_from"`
 	Experimental   bool     `json:"experimental"`
 	LintianVersion string   `json:"lintian_version"`
+	Screens        []Screen `json:"screens"`
 }
 
 type TmplParams struct {
