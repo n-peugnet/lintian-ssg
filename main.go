@@ -112,6 +112,8 @@ var (
 	tagTmplStr string
 	//go:embed manual.html.tmpl
 	manualTmplStr string
+	//go:embed 404.html.tmpl
+	e404TmplStr string
 	//go:embed main.css
 	mainCSS []byte
 	//go:embed openlogo-50.svg
@@ -242,13 +244,13 @@ func writeManual(tmpl *template.Template, params TmplParams) error {
 	return writeFiles([]File{{"manual/index.html", &out}})
 }
 
-func writeIndex(tmpl *template.Template, params TmplParams) error {
-	file, err := os.Create(filepath.Join(outDir, "index.html"))
+func writeSimplePage(tmpl *template.Template, params TmplParams, path string, root string) error {
+	file, err := os.Create(filepath.Join(outDir, path))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	params.Root = "./"
+	params.Root = root
 	return tmpl.Execute(file, params)
 }
 
@@ -258,6 +260,7 @@ func main() {
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
 	tagTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(tagTmplStr))
 	manualTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(manualTmplStr))
+	e404Tmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(e404TmplStr))
 
 	listTagsOut := strings.Builder{}
 	listTagsCmd := exec.Command("lintian-explain-tags", "--list-tags")
@@ -320,8 +323,11 @@ func main() {
 	if err := writeManual(manualTmpl, params); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
 	}
-	if err := writeIndex(indexTmpl, params); err != nil {
+	if err := writeSimplePage(indexTmpl, params, "index.html", "./"); err != nil {
 		log.Fatalln("ERROR: write index.html:", err)
+	}
+	if err := writeSimplePage(e404Tmpl, params, "404.html", "/"); err != nil {
+		log.Fatalln("ERROR: write 404.html:", err)
 	}
 
 	wg.Wait()
