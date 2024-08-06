@@ -111,7 +111,7 @@ var (
 	//go:embed favicon.ico
 	faviconICO []byte
 
-	version  = "v0.1.0"
+	version  = ""
 	mdParser = goldmark.New(
 		goldmark.WithParser(parser.NewParser(
 			parser.WithBlockParsers(
