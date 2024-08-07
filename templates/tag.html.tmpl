@@ -34,7 +34,9 @@
       <dd>
         {{ .ReasonHTML }}
         {{ .AdvocatesHTML }}
+{{- if .SeeAlso }}
         {{ .SeeAlsoHTML }}
+{{- end }}
       </dd>
 {{- end }}
     </dl>
