@@ -1,0 +1,12 @@
+{{ define "title" }}Lintian Tag: {{ .PrevName }}{{ end }}
+
+{{ define "description" }}The lintian tag {{ .PrevName }} has been renamed to {{ .Name }}{{ end }}
+
+{{ define "content" }}
+    <h1>
+      <code class="{{ .Visibility }}{{ if .Experimental }} experimental{{ end }}">
+        {{ .PrevName }}
+      </code>
+    </h1>
+    This tag has been renamed to <a href="{{ .Root }}tags/{{ .Name }}.html"><code>{{ .Name }}</code></a>.
+{{ end }}

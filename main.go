@@ -98,6 +98,7 @@ type TagTmplParams struct {
 	ExplanationHTML template.HTML
 	SeeAlsoHTML     []template.HTML
 	RenamedFromStr  string
+	PrevName        string
 }
 
 type File struct {
@@ -110,6 +111,8 @@ var (
 	indexTmplStr string
 	//go:embed templates/tag.html.tmpl
 	tagTmplStr string
+	//go:embed templates/renamed.html.tmpl
+	renamedTmplStr string
 	//go:embed templates/manual.html.tmpl
 	manualTmplStr string
 	//go:embed templates/404.html.tmpl
@@ -179,21 +182,40 @@ func buildTmplParams(tag *Tag, params TmplParams) *TagTmplParams {
 	return tmplParams
 }
 
-func renderTag(tag *Tag, params TmplParams, tmpl *template.Template, wg *sync.WaitGroup) {
-	defer wg.Done()
-	dir, name := path.Split(tag.Name)
+func createFile(name string) (dir string, file *os.File, err error) {
+	dir, name = path.Split(name)
 	dirPath := filepath.Join(outDir, "tags", dir)
 	filePath := filepath.Join(dirPath, name+".html")
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		panic(err)
+	if err = os.MkdirAll(dirPath, 0755); err != nil {
+		return
 	}
-	file, err := os.Create(filePath)
+	file, err = os.Create(filePath)
+	return
+}
+
+func renderTag(tag *Tag, params TmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, wg *sync.WaitGroup) {
+	defer wg.Done()
+	dir, file, err := createFile(tag.Name)
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 	params.Root = rootRelPath(dir)
-	if err := tmpl.Execute(file, buildTmplParams(tag, params)); err != nil {
+	tagParams := buildTmplParams(tag, params)
+	if err := tagTmpl.Execute(file, tagParams); err != nil {
 		panic(err)
+	}
+	for _, name := range tag.RenamedFrom {
+		dir, file, err := createFile(name)
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+		tagParams.Root = rootRelPath(dir)
+		tagParams.PrevName = name
+		if err := renamedTmpl.Execute(file, tagParams); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -259,6 +281,7 @@ func main() {
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
 	tagTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(tagTmplStr))
+	renamedTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(renamedTmplStr))
 	manualTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(manualTmplStr))
 	e404Tmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(e404TmplStr))
 
@@ -309,7 +332,7 @@ func main() {
 			params.VersionLintian = tag.LintianVersion
 		}
 		wg.Add(1)
-		go renderTag(&tag, params, tagTmpl, &wg)
+		go renderTag(&tag, params, tagTmpl, renamedTmpl, &wg)
 	}
 
 	// discard closing bracket
