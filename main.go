@@ -39,6 +39,7 @@ import (
 	"github.com/n-peugnet/lintian-ssg/ioutil"
 	"github.com/n-peugnet/lintian-ssg/markdown"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
@@ -147,6 +148,7 @@ var (
 			util.Prioritized(markdown.NewIndentedCodeBlockRenderer(), 500),
 		)),
 		goldmark.WithRendererOptions(html.WithUnsafe()),
+		goldmark.WithExtensions(extension.Linkify),
 	)
 )
 
