@@ -7,7 +7,7 @@ import (
 )
 
 // BodyFilterReader is a io.Reader wrapper that returns only the content of the
-// <body></body> HTML tag. It is a real HTML parser and is very dumb, as it can
+// <body></body> HTML tag. It is NOT a real HTML parser and is very dumb, as it can
 // only work if the start and end tags are each on a single line and have no
 // attributes.
 type BodyFilterReader struct {
