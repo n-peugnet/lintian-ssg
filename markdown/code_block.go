@@ -57,13 +57,13 @@ func (b *anyIndentCodeBlockParser) Trigger() []byte {
 func (b *anyIndentCodeBlockParser) Open(parent ast.Node, reader text.Reader, pc parser.Context) (ast.Node, parser.State) {
 	line, segment := reader.PeekLine()
 	var i, pos, padding int
-	for i = indentMin; i <= indentMax; i++ {
+	for i = indentMax; i >= indentMin; i-- {
 		pos, padding = util.IndentPosition(line, reader.LineOffset(), i)
 		if pos >= 0 && !util.IsBlank(line) {
 			break
 		}
 	}
-	if i > indentMax {
+	if i < indentMin {
 		return nil, parser.NoChildren
 	}
 	b.currentIndent = i
