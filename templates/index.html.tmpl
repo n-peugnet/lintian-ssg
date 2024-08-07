@@ -58,7 +58,8 @@
 {{- if .Version }}
       <a href="https://github.com/n-peugnet/lintian-ssg/tree/{{ .Version }}">{{ .Version }}</a>
 {{- end }}
-      {{ if .VersionLintian }}(lintian v{{ .VersionLintian }}){{ end }} -
+      {{ if .VersionLintian }}(lintian v{{ .VersionLintian }}){{ end }}
+      on {{ .Date }} -
       <a href="https://github.com/n-peugnet/lintian-ssg">Source code and bugs</a>
     </p>
   </div>

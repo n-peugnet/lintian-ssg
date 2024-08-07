@@ -34,6 +34,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/n-peugnet/lintian-ssg/ioutil"
 	"github.com/n-peugnet/lintian-ssg/markdown"
@@ -80,6 +81,7 @@ type Tag struct {
 }
 
 type TmplParams struct {
+	Date           string
 	Root           string
 	Version        string
 	VersionLintian string
@@ -311,6 +313,7 @@ func main() {
 	tagTmpl.ExecuteTemplate(&buf, "lintian-tags", listTagsLines)
 	tagDatalist := buf.String()
 	params := TmplParams{
+		Date:        time.Now().UTC().Format(time.RFC1123),
 		Version:     version,
 		TagList:     listTagsLines,
 		TagDatalist: template.HTML(tagDatalist),
