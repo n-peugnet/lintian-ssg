@@ -174,10 +174,10 @@ func md2htmlWarn(src string, ctx string) template.HTML {
 	return html
 }
 
-func buildTmplParams(tag *Tag, params TmplParams) *TagTmplParams {
+func buildTmplParams(tag *Tag, params *TmplParams) *TagTmplParams {
 	tmplParams := &TagTmplParams{
 		Tag:            *tag,
-		TmplParams:     params,
+		TmplParams:     *params,
 		RenamedFromStr: strings.Join(tag.RenamedFrom, ", "),
 	}
 	tmplParams.ExplanationHTML = md2htmlWarn(tag.Explanation, "explanation")
@@ -199,15 +199,15 @@ func createFile(name string) (dir string, file *os.File, err error) {
 	return
 }
 
-func renderTag(tag *Tag, params TmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, wg *sync.WaitGroup) {
+func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, wg *sync.WaitGroup) {
 	defer wg.Done()
 	dir, file, err := createFile(tag.Name)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	params.Root = rootRelPath(dir)
 	tagParams := buildTmplParams(tag, params)
+	tagParams.Root = rootRelPath(dir)
 	if err := tagTmpl.Execute(file, tagParams); err != nil {
 		panic(err)
 	}
@@ -252,7 +252,7 @@ func writeAssets() error {
 	})
 }
 
-func writeManual(tmpl *template.Template, params TmplParams) error {
+func writeManual(tmpl *template.Template, params *TmplParams) error {
 	file, err := os.Open(manualPath)
 	if err != nil {
 		return err
@@ -263,10 +263,10 @@ func writeManual(tmpl *template.Template, params TmplParams) error {
 	if _, err := io.Copy(&body, reader); err != nil {
 		return err
 	}
-	params.Root = "../"
-	manualParams := ManualTmplParams{params, template.HTML(body.String())}
+	manualParams := ManualTmplParams{*params, template.HTML(body.String())}
+	manualParams.Root = "../"
 	out := bytes.Buffer{}
-	if err := tmpl.Execute(&out, manualParams); err != nil {
+	if err := tmpl.Execute(&out, &manualParams); err != nil {
 		return err
 	}
 	return writeFiles([]File{{"manual/index.html", &out}})
@@ -279,7 +279,7 @@ func writeSimplePage(tmpl *template.Template, params TmplParams, path string, ro
 	}
 	defer file.Close()
 	params.Root = root
-	return tmpl.Execute(file, params)
+	return tmpl.Execute(file, &params)
 }
 
 func main() {
@@ -342,7 +342,7 @@ func main() {
 			params.VersionLintian = tag.LintianVersion
 		}
 		wg.Add(1)
-		go renderTag(&tag, params, tagTmpl, renamedTmpl, &wg)
+		go renderTag(&tag, &params, tagTmpl, renamedTmpl, &wg)
 	}
 
 	// discard closing bracket
@@ -353,7 +353,7 @@ func main() {
 	if err := writeAssets(); err != nil {
 		log.Fatalln("ERROR: write assets:", err)
 	}
-	if err := writeManual(manualTmpl, params); err != nil {
+	if err := writeManual(manualTmpl, &params); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
 	}
 	if err := writeSimplePage(indexTmpl, params, "index.html", "./"); err != nil {
