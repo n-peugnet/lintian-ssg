@@ -82,6 +82,7 @@ type Tag struct {
 }
 
 type TmplParams struct {
+	DateYear       int
 	DateHuman      string
 	DateMachine    string
 	Root           string
@@ -317,6 +318,7 @@ func main() {
 	tagDatalist := buf.String()
 	date := time.Now().UTC()
 	params := TmplParams{
+		DateYear:    date.Year(),
 		DateHuman:   date.Format(time.RFC1123),
 		DateMachine: date.Format(time.RFC3339),
 		Version:     version,

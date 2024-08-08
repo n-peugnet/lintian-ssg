@@ -62,6 +62,8 @@
       {{ if .VersionLintian }}(lintian v{{ .VersionLintian }}){{ end }}
       on <time datetime="{{ .DateMachine }}">{{ .DateHuman }}</time> -
       <a href="https://github.com/n-peugnet/lintian-ssg">Source code and bugs</a>
+      <br />
+      Copyright © {{ block "copyright" . }}1998-{{ .DateYear }} <a href="https://salsa.debian.org/lintian/lintian">Lintian</a> authors{{ end }}
     </p>
   </div>
 
