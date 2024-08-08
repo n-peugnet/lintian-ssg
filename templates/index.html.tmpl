@@ -6,6 +6,7 @@
   <title>{{ block "title" . }}Lintian Tags{{ end }}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="{{ block "description" . }}Online explanation of all the lintian tags{{ end }}" />
+  <meta name="generator" content="lintian-ssg {{ .Version }}" />
   <link rel="icon" href="{{ .Root }}favicon.ico">
   <link rel="stylesheet" href="https://www.debian.org/debian.css">
   <link rel="stylesheet" href="{{ .Root }}main.css">
@@ -59,7 +60,7 @@
       <a href="https://github.com/n-peugnet/lintian-ssg/tree/{{ .Version }}">{{ .Version }}</a>
 {{- end }}
       {{ if .VersionLintian }}(lintian v{{ .VersionLintian }}){{ end }}
-      on {{ .Date }} -
+      on <time datetime="{{ .DateMachine }}">{{ .DateHuman }}</time> -
       <a href="https://github.com/n-peugnet/lintian-ssg">Source code and bugs</a>
     </p>
   </div>

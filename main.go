@@ -82,7 +82,8 @@ type Tag struct {
 }
 
 type TmplParams struct {
-	Date           string
+	DateHuman      string
+	DateMachine    string
 	Root           string
 	Version        string
 	VersionLintian string
@@ -314,8 +315,10 @@ func main() {
 	buf := bytes.Buffer{}
 	tagTmpl.ExecuteTemplate(&buf, "lintian-tags", listTagsLines)
 	tagDatalist := buf.String()
+	date := time.Now().UTC()
 	params := TmplParams{
-		Date:        time.Now().UTC().Format(time.RFC1123),
+		DateHuman:   date.Format(time.RFC1123),
+		DateMachine: date.Format(time.RFC3339),
 		Version:     version,
 		TagList:     listTagsLines,
 		TagDatalist: template.HTML(tagDatalist),
