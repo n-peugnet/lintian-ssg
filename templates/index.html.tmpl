@@ -81,6 +81,7 @@
       }))
     const forms = document.querySelectorAll(".searchbox-form")
     for (const form of forms) {
+      form.style.display = "block"
       form.onsubmit = (event) => {
         event.preventDefault()
         window.location = "{{ .Root }}tags/" + form.elements.namedItem("q").value + ".html";

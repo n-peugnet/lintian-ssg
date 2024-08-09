@@ -23,6 +23,10 @@ div#spacer {
 	text-align: right;
 }
 
+.searchbox-form {
+	display: none; /* The searchbox are broken without JS, so they are hidden by default */
+}
+
 .searchbox-form input[type="search"] {
 	max-width: 400px;
 	width: calc(100% - 60px);
