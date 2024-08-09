@@ -89,7 +89,6 @@ type TmplParams struct {
 	Version        string
 	VersionLintian string
 	TagList        []string
-	TagDatalist    template.HTML
 }
 
 type ManualTmplParams struct {
@@ -316,9 +315,6 @@ func main() {
 		log.Fatalln("ERROR:", err)
 	}
 
-	buf := bytes.Buffer{}
-	tagTmpl.ExecuteTemplate(&buf, "lintian-tags", listTagsLines)
-	tagDatalist := buf.String()
 	date := time.Now().UTC()
 	params := TmplParams{
 		DateYear:    date.Year(),
@@ -326,7 +322,6 @@ func main() {
 		DateMachine: date.Format(time.RFC3339),
 		Version:     version,
 		TagList:     listTagsLines,
-		TagDatalist: template.HTML(tagDatalist),
 	}
 
 	// discard open bracket
@@ -353,6 +348,13 @@ func main() {
 		log.Fatalln("ERROR:", err)
 	}
 
+	listTagsJSON, err := json.Marshal(listTagsLines)
+	if err != nil {
+		log.Fatalln("ERROR: marshal listTagsLines:", err)
+	}
+	if err := writeFiles([]File{{"taglist.json", bytes.NewReader(listTagsJSON)}}); err != nil {
+		log.Fatalln("ERROR: write taglist:", err)
+	}
 	if err := writeAssets(); err != nil {
 		log.Fatalln("ERROR: write assets:", err)
 	}

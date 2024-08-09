@@ -68,7 +68,17 @@
     </p>
   </div>
 
+  <datalist id="lintian-tags-datalist"></datalist>
+
   <script>
+    const datalist = document.getElementById("lintian-tags-datalist")
+    fetch("{{ .Root }}taglist.json", {cache: "force-cache"})
+      .then((res) => res.json())
+      .then((taglist) => taglist.forEach((tagname) => {
+          let option = document.createElement('option');
+          option.value = tagname;
+          datalist.appendChild(option);
+      }))
     const forms = document.querySelectorAll(".searchbox-form")
     for (const form of forms) {
       form.onsubmit = (event) => {
@@ -77,16 +87,6 @@
       }
     };
   </script>
-
-  {{ .TagDatalist }}
 </body>
 </html>
-{{ end }}
-
-{{ define "lintian-tags" }}
-<datalist id="lintian-tags-datalist">
-{{- range . }}
-  <option value="{{ . }}"></option>
-{{- end }}
-</datalist>
 {{ end }}
