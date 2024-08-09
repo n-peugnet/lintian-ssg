@@ -120,6 +120,8 @@ var (
 	renamedTmplStr string
 	//go:embed templates/manual.html.tmpl
 	manualTmplStr string
+	//go:embed templates/about.html.tmpl
+	aboutTmplStr string
 	//go:embed templates/404.html.tmpl
 	e404TmplStr string
 	//go:embed assets/main.css
@@ -289,6 +291,7 @@ func main() {
 	tagTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(tagTmplStr))
 	renamedTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(renamedTmplStr))
 	manualTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(manualTmplStr))
+	aboutTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(aboutTmplStr))
 	e404Tmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(e404TmplStr))
 
 	listTagsOut := strings.Builder{}
@@ -355,6 +358,9 @@ func main() {
 	}
 	if err := writeManual(manualTmpl, &params); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
+	}
+	if err := writeSimplePage(aboutTmpl, params, "about.html", "./"); err != nil {
+		log.Fatalln("ERROR: write about.html:", err)
 	}
 	if err := writeSimplePage(indexTmpl, params, "index.html", "./"); err != nil {
 		log.Fatalln("ERROR: write index.html:", err)
