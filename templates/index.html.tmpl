@@ -10,6 +10,9 @@
   <link rel="icon" href="{{ .Root }}favicon.ico">
   <link rel="stylesheet" href="https://www.debian.org/debian.css">
   <link rel="stylesheet" href="{{ .Root }}main.css">
+{{- if .BaseURL }}
+  <link rel="canonical" href="{{ .BaseURL }}{{ block "page" . }}index.html{{ end }}">
+{{- end }}
 </head>
 <body>
   <div id="header">

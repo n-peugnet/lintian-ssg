@@ -2,6 +2,8 @@
 
 {{ define "description" }}Explanation for the lintian tag {{ .Name }}{{ end }}
 
+{{ define "page" }}tag/{{ .Name }}.html{{ end }}
+
 {{ define "content" }}
     <h1>
       <code class="{{ .Visibility }}{{ if .Experimental }} experimental{{ end }}">

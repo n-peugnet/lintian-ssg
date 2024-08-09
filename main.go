@@ -24,6 +24,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"html/template"
 	"io"
@@ -85,6 +86,7 @@ type TmplParams struct {
 	DateYear       int
 	DateHuman      string
 	DateMachine    string
+	BaseURL        string
 	Root           string
 	Version        string
 	VersionLintian string
@@ -129,6 +131,9 @@ var (
 	logoSVG []byte
 	//go:embed assets/favicon.ico
 	faviconICO []byte
+
+	flagBaseURL = flag.String("base-url", "", `URL, including the scheme and final slash, where the root of the website will be
+located. This will be used to emit the canonical URL of each page.`)
 
 	version  = ""
 	mdParser = goldmark.New(
@@ -285,6 +290,7 @@ func writeSimplePage(tmpl *template.Template, params TmplParams, path string, ro
 
 func main() {
 	log.SetFlags(0)
+	flag.Parse()
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
 	tagTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(tagTmplStr))
@@ -317,6 +323,7 @@ func main() {
 
 	date := time.Now().UTC()
 	params := TmplParams{
+		BaseURL:     *flagBaseURL,
 		DateYear:    date.Year(),
 		DateHuman:   date.Format(time.RFC1123),
 		DateMachine: date.Format(time.RFC3339),
