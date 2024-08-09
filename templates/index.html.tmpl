@@ -71,14 +71,17 @@
   <datalist id="lintian-tags-datalist"></datalist>
 
   <script>
-    const datalist = document.getElementById("lintian-tags-datalist")
-    fetch("{{ .Root }}taglist.json", {cache: "force-cache"})
-      .then((res) => res.json())
-      .then((taglist) => taglist.forEach((tagname) => {
-          let option = document.createElement('option');
-          option.value = tagname;
-          datalist.appendChild(option);
-      }))
+    window.addEventListener("load", () => {
+      const datalist = document.getElementById("lintian-tags-datalist")
+      fetch("{{ .Root }}taglist.json", {cache: "force-cache"})
+        .then((res) => res.json())
+        .then((taglist) => taglist.forEach((tagname) => {
+            let option = document.createElement('option');
+            option.value = tagname;
+            datalist.appendChild(option);
+        }))
+    })
+
     const forms = document.querySelectorAll(".searchbox-form")
     for (const form of forms) {
       form.style.display = "block"
@@ -86,7 +89,7 @@
         event.preventDefault()
         window.location = "{{ .Root }}tags/" + form.elements.namedItem("q").value + ".html";
       }
-    };
+    }
   </script>
 </body>
 </html>
