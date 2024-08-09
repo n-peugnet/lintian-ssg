@@ -133,7 +133,7 @@ var (
 	faviconICO []byte
 
 	flagBaseURL = flag.String("base-url", "", `URL, including the scheme and final slash, where the root of the website will be
-located. This will be used to emit the canonical URL of each page.`)
+located. This will be used to emit the canonical URL of each page and the sitemap.`)
 
 	version  = ""
 	mdParser = goldmark.New(
@@ -162,7 +162,7 @@ located. This will be used to emit the canonical URL of each page.`)
 
 func rootRelPath(dir string) string {
 	count := strings.Count(dir, "/")
-	return strings.Repeat("../", count+1)
+	return strings.Repeat("../", count)
 }
 
 func md2html(src string) (template.HTML, error) {
@@ -205,15 +205,16 @@ func createFile(name string) (dir string, file *os.File, err error) {
 	return
 }
 
-func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, wg *sync.WaitGroup) {
+func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, pages chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	dir, file, err := createFile(tag.Name)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
+	pages <- "tags/" + tag.Name + ".html"
 	tagParams := buildTmplParams(tag, params)
-	tagParams.Root = rootRelPath(dir)
+	tagParams.Root = rootRelPath("tags/" + dir)
 	if err := tagTmpl.Execute(file, tagParams); err != nil {
 		panic(err)
 	}
@@ -223,6 +224,7 @@ func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamed
 			panic(err)
 		}
 		defer file.Close()
+		pages <- "tags/" + name + ".html"
 		tagParams.Root = rootRelPath(dir)
 		tagParams.PrevName = name
 		if err := renamedTmpl.Execute(file, tagParams); err != nil {
@@ -258,7 +260,29 @@ func writeAssets() error {
 	})
 }
 
-func writeManual(tmpl *template.Template, params *TmplParams) error {
+func writeSitemap(pages <-chan string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+	file, err := os.Create(filepath.Join(outDir, "sitemap.txt"))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	for page := range pages {
+		if _, err := file.WriteString(*flagBaseURL + page + "\n"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func writeSitemapDummy(pages <-chan string, wg *sync.WaitGroup) error {
+	defer wg.Done()
+	for range pages {
+	}
+	return nil
+}
+
+func writeManual(tmpl *template.Template, params *TmplParams, path string, pages chan<- string) error {
 	file, err := os.Open(manualPath)
 	if err != nil {
 		return err
@@ -269,21 +293,25 @@ func writeManual(tmpl *template.Template, params *TmplParams) error {
 	if _, err := io.Copy(&body, reader); err != nil {
 		return err
 	}
+	pages <- path
 	manualParams := ManualTmplParams{*params, template.HTML(body.String())}
-	manualParams.Root = "../"
+	manualParams.Root = rootRelPath(path)
 	out := bytes.Buffer{}
 	if err := tmpl.Execute(&out, &manualParams); err != nil {
 		return err
 	}
-	return writeFiles([]File{{"manual/index.html", &out}})
+	return writeFiles([]File{{path, &out}})
 }
 
-func writeSimplePage(tmpl *template.Template, params TmplParams, path string, root string) error {
+func writeSimplePage(tmpl *template.Template, params TmplParams, path string, root string, pages chan<- string) error {
 	file, err := os.Create(filepath.Join(outDir, path))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
+	if pages != nil {
+		pages <- path
+	}
 	params.Root = root
 	return tmpl.Execute(file, &params)
 }
@@ -291,6 +319,16 @@ func writeSimplePage(tmpl *template.Template, params TmplParams, path string, ro
 func main() {
 	log.SetFlags(0)
 	flag.Parse()
+
+	pagesChan := make(chan string, 32)
+	sitemapWG := sync.WaitGroup{}
+	sitemapWG.Add(1)
+
+	if *flagBaseURL == "" {
+		go writeSitemapDummy(pagesChan, &sitemapWG)
+	} else {
+		go writeSitemap(pagesChan, &sitemapWG)
+	}
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
 	tagTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(tagTmplStr))
@@ -336,7 +374,7 @@ func main() {
 		log.Fatalln("ERROR:", err)
 	}
 
-	wg := sync.WaitGroup{}
+	tagsWG := sync.WaitGroup{}
 	// while the array contains values
 	for jsonTagsDecoder.More() {
 		var tag Tag
@@ -346,8 +384,8 @@ func main() {
 		if params.VersionLintian == "" {
 			params.VersionLintian = tag.LintianVersion
 		}
-		wg.Add(1)
-		go renderTag(&tag, &params, tagTmpl, renamedTmpl, &wg)
+		tagsWG.Add(1)
+		go renderTag(&tag, &params, tagTmpl, renamedTmpl, pagesChan, &tagsWG)
 	}
 
 	// discard closing bracket
@@ -365,20 +403,22 @@ func main() {
 	if err := writeAssets(); err != nil {
 		log.Fatalln("ERROR: write assets:", err)
 	}
-	if err := writeManual(manualTmpl, &params); err != nil {
+	if err := writeManual(manualTmpl, &params, "manual/index.html", pagesChan); err != nil {
 		log.Fatalln("ERROR: write manual:", err)
 	}
-	if err := writeSimplePage(aboutTmpl, params, "about.html", "./"); err != nil {
+	if err := writeSimplePage(aboutTmpl, params, "about.html", "./", pagesChan); err != nil {
 		log.Fatalln("ERROR: write about.html:", err)
 	}
-	if err := writeSimplePage(indexTmpl, params, "index.html", "./"); err != nil {
+	if err := writeSimplePage(indexTmpl, params, "index.html", "./", pagesChan); err != nil {
 		log.Fatalln("ERROR: write index.html:", err)
 	}
-	if err := writeSimplePage(e404Tmpl, params, "404.html", "/"); err != nil {
+	if err := writeSimplePage(e404Tmpl, params, "404.html", "/", nil); err != nil {
 		log.Fatalln("ERROR: write 404.html:", err)
 	}
 
-	wg.Wait()
+	tagsWG.Wait()
+	close(pagesChan)
+	sitemapWG.Wait()
 	if err := jsonTagsCmd.Wait(); err != nil {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
