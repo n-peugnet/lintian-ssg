@@ -132,8 +132,9 @@ var (
 	//go:embed assets/favicon.ico
 	faviconICO []byte
 
-	flagBaseURL = flag.String("base-url", "", `URL, including the scheme and final slash, where the root of the website will be
-located. This will be used to emit the canonical URL of each page and the sitemap.`)
+	flagBaseURL = flag.String("base-url", "", "URL, including the scheme and final slash, where the root of the website will be\n"+
+		"located. This will be used to emit the canonical URL of each page and the sitemap.")
+	flagNoSitemap = flag.Bool("no-sitemap", false, "Disable sitemap.txt generation")
 
 	version  = ""
 	mdParser = goldmark.New(
@@ -324,7 +325,7 @@ func main() {
 	sitemapWG := sync.WaitGroup{}
 	sitemapWG.Add(1)
 
-	if *flagBaseURL == "" {
+	if *flagBaseURL == "" || *flagNoSitemap {
 		go writeSitemapDummy(pagesChan, &sitemapWG)
 	} else {
 		go writeSitemap(pagesChan, &sitemapWG)
