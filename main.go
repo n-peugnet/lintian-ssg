@@ -234,34 +234,37 @@ func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamed
 	}
 }
 
-func writeFiles(files []File) error {
-	for _, f := range files {
-		path := filepath.Join(outDir, f.name)
-		dir, _ := filepath.Split(path)
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return err
-		}
-		file, err := os.Create(path)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		if _, err := io.Copy(file, f.content); err != nil {
+func writeFile(name string, content io.Reader) error {
+	path := filepath.Join(outDir, name)
+	dir, _ := filepath.Split(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err := io.Copy(file, content); err != nil {
+		return err
+	}
+	return nil
+}
+
+func writeAssets() error {
+	for _, f := range []File{
+		{"main.css", bytes.NewReader(mainCSS)},
+		{"openlogo-50.svg", bytes.NewReader(logoSVG)},
+		{"favicon.ico", bytes.NewReader(faviconICO)},
+	} {
+		if err := writeFile(f.name, f.content); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func writeAssets() error {
-	return writeFiles([]File{
-		{"main.css", bytes.NewReader(mainCSS)},
-		{"openlogo-50.svg", bytes.NewReader(logoSVG)},
-		{"favicon.ico", bytes.NewReader(faviconICO)},
-	})
-}
-
-func writeSitemap(pages <-chan string, wg *sync.WaitGroup) error {
+func writeSitemap(baseURL string, pages <-chan string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	file, err := os.Create(filepath.Join(outDir, "sitemap.txt"))
 	if err != nil {
@@ -269,14 +272,14 @@ func writeSitemap(pages <-chan string, wg *sync.WaitGroup) error {
 	}
 	defer file.Close()
 	for page := range pages {
-		if _, err := file.WriteString(*flagBaseURL + page + "\n"); err != nil {
+		if _, err := file.WriteString(baseURL + page + "\n"); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func writeSitemapDummy(pages <-chan string, wg *sync.WaitGroup) error {
+func discardSitemap(pages <-chan string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	for range pages {
 	}
@@ -301,7 +304,7 @@ func writeManual(tmpl *template.Template, params *TmplParams, path string, pages
 	if err := tmpl.Execute(&out, &manualParams); err != nil {
 		return err
 	}
-	return writeFiles([]File{{path, &out}})
+	return writeFile(path, &out)
 }
 
 func writeSimplePage(tmpl *template.Template, params TmplParams, path string, root string, pages chan<- string) error {
@@ -326,9 +329,9 @@ func main() {
 	sitemapWG.Add(1)
 
 	if *flagBaseURL == "" || *flagNoSitemap {
-		go writeSitemapDummy(pagesChan, &sitemapWG)
+		go discardSitemap(pagesChan, &sitemapWG)
 	} else {
-		go writeSitemap(pagesChan, &sitemapWG)
+		go writeSitemap(*flagBaseURL, pagesChan, &sitemapWG)
 	}
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
@@ -398,7 +401,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("ERROR: marshal listTagsLines:", err)
 	}
-	if err := writeFiles([]File{{"taglist.json", bytes.NewReader(listTagsJSON)}}); err != nil {
+	if err := writeFile("taglist.json", bytes.NewReader(listTagsJSON)); err != nil {
 		log.Fatalln("ERROR: write taglist:", err)
 	}
 	if err := writeAssets(); err != nil {
