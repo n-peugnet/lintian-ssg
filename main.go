@@ -163,6 +163,9 @@ var (
 
 func rootRelPath(dir string) string {
 	count := strings.Count(dir, "/")
+	if count == 0 {
+		return "./"
+	}
 	return strings.Repeat("../", count)
 }
 
@@ -195,38 +198,37 @@ func buildTmplParams(tag *Tag, params *TmplParams) *TagTmplParams {
 	return tmplParams
 }
 
-func createFile(name string) (dir string, file *os.File, err error) {
-	dir, name = path.Split(name)
-	dirPath := filepath.Join(outDir, "tags", dir)
-	filePath := filepath.Join(dirPath, name+".html")
-	if err = os.MkdirAll(dirPath, 0755); err != nil {
+func createTagFile(name string) (page string, file *os.File, err error) {
+	page = path.Join("tags", name+".html")
+	outPath := filepath.Join(outDir, page)
+	if err = os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
 		return
 	}
-	file, err = os.Create(filePath)
+	file, err = os.Create(outPath)
 	return
 }
 
 func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, pages chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	dir, file, err := createFile(tag.Name)
+	page, file, err := createTagFile(tag.Name)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	pages <- "tags/" + tag.Name + ".html"
+	pages <- page
 	tagParams := buildTmplParams(tag, params)
-	tagParams.Root = rootRelPath("tags/" + dir)
+	tagParams.Root = rootRelPath(page)
 	if err := tagTmpl.Execute(file, tagParams); err != nil {
 		panic(err)
 	}
 	for _, name := range tag.RenamedFrom {
-		dir, file, err := createFile(name)
+		page, file, err := createTagFile(name)
 		if err != nil {
 			panic(err)
 		}
 		defer file.Close()
-		pages <- "tags/" + name + ".html"
-		tagParams.Root = rootRelPath("tags/" + dir)
+		pages <- page
+		tagParams.Root = rootRelPath(page)
 		tagParams.PrevName = name
 		if err := renamedTmpl.Execute(file, tagParams); err != nil {
 			panic(err)
