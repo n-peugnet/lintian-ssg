@@ -226,7 +226,7 @@ func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamed
 		}
 		defer file.Close()
 		pages <- "tags/" + name + ".html"
-		tagParams.Root = rootRelPath(dir)
+		tagParams.Root = rootRelPath("tags/" + dir)
 		tagParams.PrevName = name
 		if err := renamedTmpl.Execute(file, tagParams); err != nil {
 			panic(err)
