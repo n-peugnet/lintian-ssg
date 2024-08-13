@@ -52,6 +52,13 @@ const (
 	manualPath = "/usr/share/doc/lintian/lintian.html"
 )
 
+type mdStyle int
+
+const (
+	styleInline mdStyle = iota
+	styleFull
+)
+
 type Screen struct {
 	Advocates []string `json:"advocates"`
 	Name      string   `json:"name"`
@@ -60,15 +67,15 @@ type Screen struct {
 }
 
 func (s Screen) AdvocatesHTML() template.HTML {
-	return md2htmlWarn(strings.Join(s.Advocates, ", "), "screen advocates")
+	return md2html(strings.Join(s.Advocates, ", "), "screen advocates", styleInline)
 }
 
 func (s Screen) ReasonHTML() template.HTML {
-	return md2htmlWarn(s.Reason, "screen reason")
+	return md2html(s.Reason, "screen reason", styleFull)
 }
 
 func (s Screen) SeeAlsoHTML() template.HTML {
-	return md2htmlWarn("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also")
+	return md2html("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also", styleInline)
 }
 
 type Tag struct {
@@ -137,7 +144,11 @@ var (
 	flagNoSitemap = flag.Bool("no-sitemap", false, "Disable sitemap.txt generation")
 
 	version  = ""
-	mdParser = goldmark.New(
+	mdInline = goldmark.New(goldmark.WithParser(parser.NewParser(
+		parser.WithBlockParsers(util.Prioritized(parser.NewParagraphParser(), 100)),
+		parser.WithInlineParsers(parser.DefaultInlineParsers()...),
+	)))
+	mdFull = goldmark.New(
 		goldmark.WithParser(parser.NewParser(
 			parser.WithBlockParsers(
 				// adapted from parser.DefaultBlockParsers(), with headings removed
@@ -169,19 +180,20 @@ func rootRelPath(dir string) string {
 	return strings.Repeat("../", count)
 }
 
-func md2html(src string) (template.HTML, error) {
+func md2html(src string, ctx string, style mdStyle) template.HTML {
+	var err error
 	buf := bytes.Buffer{}
-	err := mdParser.Convert([]byte(src), &buf)
-	return template.HTML(buf.String()), err
-}
-
-func md2htmlWarn(src string, ctx string) template.HTML {
-	html, err := md2html(src)
+	switch style {
+	case styleInline:
+		err = mdInline.Convert([]byte(src), &buf)
+	case styleFull:
+		err = mdFull.Convert([]byte(src), &buf)
+	}
 	if err != nil {
 		log.Printf("WARNING: convert markdown %s: %v", err, ctx)
 		return template.HTML(src)
 	}
-	return html
+	return template.HTML(buf.String())
 }
 
 func buildTmplParams(tag *Tag, params *TmplParams) *TagTmplParams {
@@ -190,10 +202,10 @@ func buildTmplParams(tag *Tag, params *TmplParams) *TagTmplParams {
 		TmplParams:     *params,
 		RenamedFromStr: strings.Join(tag.RenamedFrom, ", "),
 	}
-	tmplParams.ExplanationHTML = md2htmlWarn(tag.Explanation, "explanation")
+	tmplParams.ExplanationHTML = md2html(tag.Explanation, "explanation", styleFull)
 	tmplParams.SeeAlsoHTML = make([]template.HTML, len(tag.SeeAlso))
 	for i, str := range tag.SeeAlso {
-		tmplParams.SeeAlsoHTML[i] = md2htmlWarn(str, fmt.Sprintf("reference %d", i))
+		tmplParams.SeeAlsoHTML[i] = md2html(str, fmt.Sprintf("reference %d", i), styleInline)
 	}
 	return tmplParams
 }
