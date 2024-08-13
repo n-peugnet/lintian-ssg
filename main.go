@@ -160,7 +160,10 @@ var (
 				util.Prioritized(parser.NewHTMLBlockParser(), 900),
 				util.Prioritized(parser.NewParagraphParser(), 1000),
 			),
-			parser.WithInlineParsers(parser.DefaultInlineParsers()...),
+			parser.WithInlineParsers(append(
+				parser.DefaultInlineParsers(),
+				util.Prioritized(markdown.NewBugLinkParser(), 1000),
+			)...),
 			parser.WithParagraphTransformers(parser.DefaultParagraphTransformers()...),
 		)),
 		goldmark.WithRendererOptions(html.WithUnsafe()),
