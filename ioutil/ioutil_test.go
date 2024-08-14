@@ -74,3 +74,31 @@ func TestTwoReads(t *testing.T) {
 		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
 	}
 }
+
+func TestFullRead(t *testing.T) {
+	reader := bytes.NewReader(data)
+	filtered := ioutil.NewBodyFilterReader(reader)
+
+	buf := make([]byte, 30)
+
+	n, err := filtered.Read(buf)
+	if err != nil {
+		t.Fatal("unexpected error: ", err)
+	}
+	if n != 30 {
+		t.Fatal("expected n == 30, got:", n)
+	}
+	expected := []byte("testdata3\ntestdata4\ntestdata5\n")
+	if !bytes.Equal(expected, buf[:n]) {
+		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
+	}
+
+	//next read
+	n, err = filtered.Read(buf)
+	if err != io.EOF {
+		t.Fatal("unexpected error: ", err)
+	}
+	if n != 0 {
+		t.Fatal("expected n == 0, got:", n)
+	}
+}
