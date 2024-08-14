@@ -1,5 +1,7 @@
 # Lintian SSG
 
+[![build][build-img]][build-url]
+
 A very simple static site generator to replace `lintian.debian.org`.
 
 ```sh
@@ -20,3 +22,6 @@ ErrorDocument 404 /404.html
 # To allow access .html files without their extension
 Options +MultiViews
 ```
+
+[build-img]: https://github.com/n-peugnet/lintian-ssg/actions/workflows/build.yml/badge.svg
+[build-url]: https://github.com/n-peugnet/lintian-ssg/actions/workflows/build.yml
