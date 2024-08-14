@@ -339,6 +339,12 @@ func writeSimplePage(tmpl *template.Template, params TmplParams, path string, ro
 	return tmpl.Execute(file, &params)
 }
 
+func checkErr(err error, msg ...any) {
+	if err != nil {
+		log.Fatalln(append(append([]any{"ERROR:"}, msg...), err)...)
+	}
+}
+
 func main() {
 	log.SetFlags(0)
 	flag.Parse()
@@ -364,9 +370,7 @@ func main() {
 	listTagsCmd := exec.Command("lintian-explain-tags", "--list-tags")
 	listTagsCmd.Stderr = os.Stderr
 	listTagsCmd.Stdout = &listTagsOut
-	if err := listTagsCmd.Run(); err != nil {
-		log.Fatalln("ERROR:", err)
-	}
+	checkErr(listTagsCmd.Run(), "list tags:")
 	listTagsStr := strings.TrimSpace(listTagsOut.String())
 	listTagsLines := strings.Split(listTagsStr, "\n")
 
@@ -374,13 +378,9 @@ func main() {
 	jsonTagsCmd := exec.Command("lintian-explain-tags", jsonTagsArgs...)
 	jsonTagsCmd.Stderr = os.Stderr
 	jsonTagsOut, err := jsonTagsCmd.StdoutPipe()
-	if err != nil {
-		log.Fatalln("ERROR:", err)
-	}
+	checkErr(err)
 	jsonTagsDecoder := json.NewDecoder(jsonTagsOut)
-	if err := jsonTagsCmd.Start(); err != nil {
-		log.Fatalln("ERROR:", err)
-	}
+	checkErr(jsonTagsCmd.Start())
 
 	date := time.Now().UTC()
 	params := TmplParams{
@@ -393,17 +393,14 @@ func main() {
 	}
 
 	// discard open bracket
-	if _, err := jsonTagsDecoder.Token(); err != nil {
-		log.Fatalln("ERROR:", err)
-	}
+	_, err = jsonTagsDecoder.Token()
+	checkErr(err)
 
 	tagsWG := sync.WaitGroup{}
 	// while the array contains values
 	for jsonTagsDecoder.More() {
 		var tag Tag
-		if err := jsonTagsDecoder.Decode(&tag); err != nil {
-			log.Fatalln("ERROR:", err)
-		}
+		checkErr(jsonTagsDecoder.Decode(&tag))
 		if params.VersionLintian == "" {
 			params.VersionLintian = tag.LintianVersion
 		}
@@ -412,32 +409,17 @@ func main() {
 	}
 
 	// discard closing bracket
-	if _, err = jsonTagsDecoder.Token(); err != nil {
-		log.Fatalln("ERROR:", err)
-	}
+	_, err = jsonTagsDecoder.Token()
+	checkErr(err)
 
 	listTagsJSON, err := json.Marshal(listTagsLines)
-	if err != nil {
-		log.Fatalln("ERROR: marshal listTagsLines:", err)
-	}
-	if err := writeFile("taglist.json", bytes.NewReader(listTagsJSON)); err != nil {
-		log.Fatalln("ERROR: write taglist:", err)
-	}
-	if err := writeAssets(); err != nil {
-		log.Fatalln("ERROR: write assets:", err)
-	}
-	if err := writeManual(manualTmpl, &params, "manual/index.html", pagesChan); err != nil {
-		log.Fatalln("ERROR: write manual:", err)
-	}
-	if err := writeSimplePage(aboutTmpl, params, "about.html", "./", pagesChan); err != nil {
-		log.Fatalln("ERROR: write about.html:", err)
-	}
-	if err := writeSimplePage(indexTmpl, params, "index.html", "./", pagesChan); err != nil {
-		log.Fatalln("ERROR: write index.html:", err)
-	}
-	if err := writeSimplePage(e404Tmpl, params, "404.html", "/", nil); err != nil {
-		log.Fatalln("ERROR: write 404.html:", err)
-	}
+	checkErr(err, "marshal listTagsLines:")
+	checkErr(writeFile("taglist.json", bytes.NewReader(listTagsJSON)), "write taglist:")
+	checkErr(writeAssets(), "write assets:")
+	checkErr(writeManual(manualTmpl, &params, "manual/index.html", pagesChan), "write manual:")
+	checkErr(writeSimplePage(aboutTmpl, params, "about.html", "./", pagesChan), "write about.html:")
+	checkErr(writeSimplePage(indexTmpl, params, "index.html", "./", pagesChan), "write index.html:")
+	checkErr(writeSimplePage(e404Tmpl, params, "404.html", "/", nil), "write 404.html:")
 
 	tagsWG.Wait()
 	close(pagesChan)
