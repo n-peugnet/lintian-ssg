@@ -32,11 +32,10 @@ func TestBugLink(t *testing.T) {
 			`see Bug#12345.`,
 			`<p>see <a href="https://bugs.debian.org/12345">Bug#12345</a>.</p>`,
 		},
-		// TODO: make this case pass
-		// { // In parenthesis
-		// 	`(Bug#12345)`,
-		// 	`<p>(<a href="https://bugs.debian.org/12345">Bug#12345</a>)</p>`,
-		// },
+		{ // In parenthesis
+			`(Bug#12345)`,
+			`<p>(<a href="https://bugs.debian.org/12345">Bug#12345</a>)</p>`,
+		},
 	}
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("case %d %s", i, c.src), func(t *testing.T) {

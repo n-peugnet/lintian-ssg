@@ -28,7 +28,7 @@ func NewBugLinkParser() parser.InlineParser {
 
 func (p *bugLinkParser) Trigger() []byte {
 	// ' ' indicates any white spaces and a line head
-	return []byte{' '}
+	return []byte{' ', '('}
 }
 
 func (p *bugLinkParser) Parse(parent ast.Node, block text.Reader, pc parser.Context) ast.Node {
@@ -38,7 +38,8 @@ func (p *bugLinkParser) Parse(parent ast.Node, block text.Reader, pc parser.Cont
 	line, segment := block.PeekLine()
 	consumes := 0
 	start := segment.Start
-	if line[0] == ' ' {
+	switch line[0] {
+	case ' ', '(':
 		line = line[1:]
 		consumes++
 		start++
