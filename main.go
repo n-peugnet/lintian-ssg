@@ -162,6 +162,7 @@ var (
 			),
 			parser.WithInlineParsers(append(
 				parser.DefaultInlineParsers(),
+				util.Prioritized(markdown.NewManpageLinkParser(), 1000),
 				util.Prioritized(markdown.NewBugLinkParser(), 1000),
 			)...),
 			parser.WithParagraphTransformers(parser.DefaultParagraphTransformers()...),
