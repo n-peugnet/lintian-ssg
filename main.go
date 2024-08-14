@@ -42,7 +42,6 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/util"
 )
@@ -164,9 +163,6 @@ var (
 			parser.WithInlineParsers(parser.DefaultInlineParsers()...),
 			parser.WithParagraphTransformers(parser.DefaultParagraphTransformers()...),
 		)),
-		goldmark.WithRendererOptions(renderer.WithNodeRenderers(
-			util.Prioritized(markdown.NewIndentedCodeBlockRenderer(), 500),
-		)),
 		goldmark.WithRendererOptions(html.WithUnsafe()),
 		goldmark.WithExtensions(extension.Linkify),
 	)
@@ -187,6 +183,11 @@ func md2html(src string, ctx string, style mdStyle) template.HTML {
 	case styleInline:
 		err = mdInline.Convert([]byte(src), &buf)
 	case styleFull:
+		// lintian tags explanation have had their underscores (_) replaced
+		// by &lowbar; in lintian#d590cbf22 to fix plain text CLI output,
+		// unfortunately it causes problems when parsing markdown code blocks,
+		// so we smply replace them back.
+		src = strings.ReplaceAll(src, "&lowbar;", "_")
 		err = mdFull.Convert([]byte(src), &buf)
 	}
 	if err != nil {

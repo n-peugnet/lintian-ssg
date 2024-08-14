@@ -18,28 +18,6 @@ const (
 	indentMax = 4
 )
 
-// KindIndentedCodeBlock is the NodeKind of the IndentedCodeBlock node.
-var KindIndentedCodeBlock = ast.NewNodeKind("IndentedCodeBlock")
-
-// IndentedCodeBlock represents an indented code block of Markdown text.
-type IndentedCodeBlock struct {
-	ast.CodeBlock
-	Indent int
-}
-
-// NewIndentedCodeBlock returns a new CodeBlock node.
-func NewIndentedCodeBlock(indent int) *IndentedCodeBlock {
-	return &IndentedCodeBlock{
-		CodeBlock: ast.CodeBlock{BaseBlock: ast.BaseBlock{}},
-		Indent:    indent,
-	}
-}
-
-// Kind implements Node.Kind.
-func (n *IndentedCodeBlock) Kind() ast.NodeKind {
-	return KindIndentedCodeBlock
-}
-
 type anyIndentCodeBlockParser struct {
 	currentIndent int
 }
@@ -67,7 +45,7 @@ func (b *anyIndentCodeBlockParser) Open(parent ast.Node, reader text.Reader, pc 
 		return nil, parser.NoChildren
 	}
 	b.currentIndent = i
-	node := NewIndentedCodeBlock(i)
+	node := ast.NewCodeBlock()
 	reader.AdvanceAndSetPadding(pos, padding)
 	_, segment = reader.PeekLine()
 	// if code block line starts with a tab, keep a tab as it is.
