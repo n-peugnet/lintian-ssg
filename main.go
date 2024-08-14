@@ -170,6 +170,13 @@ var (
 		goldmark.WithRendererOptions(html.WithUnsafe()),
 		goldmark.WithExtensions(extension.Linkify),
 	)
+	// htmlEntReplacer is a strings.Replacer that transform some HTML entities
+	// into their unicode representation.
+	htmlEntReplacer = strings.NewReplacer(
+		"&lowbar;", "_",
+		"&lt;", "<",
+		"&gt;", ">",
+	)
 )
 
 func rootRelPath(dir string) string {
@@ -187,11 +194,12 @@ func md2html(src string, ctx string, style mdStyle) template.HTML {
 	case styleInline:
 		err = mdInline.Convert([]byte(src), &buf)
 	case styleFull:
-		// lintian tags explanation have had their underscores (_) replaced
-		// by &lowbar; in lintian#d590cbf22 to fix plain text CLI output,
-		// unfortunately it causes problems when parsing markdown code blocks,
-		// so we smply replace them back.
-		src = strings.ReplaceAll(src, "&lowbar;", "_")
+		// Lintian tags explanation have had their underscores (_) replaced by
+		// &lowbar; in lintian#d590cbf22, as well as some other special chars,
+		// to fix plain text CLI output. Unfortunately it causes problems when
+		// rendering markdown code blocks, so we simply replace them back, as
+		// they will be escaped as needed by goldmark.
+		src = htmlEntReplacer.Replace(src)
 		err = mdFull.Convert([]byte(src), &buf)
 	}
 	if err != nil {
