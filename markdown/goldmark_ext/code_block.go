@@ -4,7 +4,7 @@
 // SPDX-FileCopyrightText: 2024 Nicolas Peugnet <nicolas@club1.fr>
 // SPDX-License-Identifier: MIT
 
-package markdown
+package goldmark_ext
 
 import (
 	"github.com/yuin/goldmark/ast"

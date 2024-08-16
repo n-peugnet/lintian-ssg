@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Nicolas Peugnet <nicolas@club1.fr>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-package markdown
+package goldmark_ext
 
 import (
 	"fmt"

@@ -39,24 +39,12 @@ import (
 
 	"github.com/n-peugnet/lintian-ssg/ioutil"
 	"github.com/n-peugnet/lintian-ssg/markdown"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/util"
 )
 
 const (
 	outDir       = "out"
 	manualPath   = "/usr/share/doc/lintian/lintian.html"
 	sourceURLFmt = "https://salsa.debian.org/lintian/lintian/-/blob/%s/tags/%s.tag"
-)
-
-type mdStyle int
-
-const (
-	styleInline mdStyle = iota
-	styleFull
 )
 
 type Screen struct {
@@ -67,15 +55,15 @@ type Screen struct {
 }
 
 func (s *Screen) AdvocatesHTML() template.HTML {
-	return md2html(strings.Join(s.Advocates, ", "), "screen advocates", styleInline)
+	return markdown.ToHTML(strings.Join(s.Advocates, ", "), "screen advocates", markdown.StyleInline)
 }
 
 func (s *Screen) ReasonHTML() template.HTML {
-	return md2html(s.Reason, "screen reason", styleFull)
+	return markdown.ToHTML(s.Reason, "screen reason", markdown.StyleFull)
 }
 
 func (s *Screen) SeeAlsoHTML() template.HTML {
-	return md2html("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also", styleInline)
+	return markdown.ToHTML("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also", markdown.StyleInline)
 }
 
 type Tag struct {
@@ -91,13 +79,13 @@ type Tag struct {
 }
 
 func (t *Tag) ExplanationHTML() template.HTML {
-	return md2html(t.Explanation, "explanation", styleFull)
+	return markdown.ToHTML(t.Explanation, "explanation", markdown.StyleFull)
 }
 
 func (t *Tag) SeeAlsoHTML() []template.HTML {
 	seeAlsoHTML := make([]template.HTML, len(t.SeeAlso))
 	for i, str := range t.SeeAlso {
-		seeAlsoHTML[i] = md2html(str, fmt.Sprintf("reference %d", i), styleInline)
+		seeAlsoHTML[i] = markdown.ToHTML(str, fmt.Sprintf("reference %d", i), markdown.StyleInline)
 	}
 	return seeAlsoHTML
 }
@@ -166,41 +154,6 @@ var (
 	flagNoSitemap = flag.Bool("no-sitemap", false, "Disable sitemap.txt generation")
 
 	version  = ""
-	mdInline = goldmark.New(goldmark.WithParser(parser.NewParser(
-		parser.WithBlockParsers(util.Prioritized(parser.NewParagraphParser(), 100)),
-		parser.WithInlineParsers(parser.DefaultInlineParsers()...),
-	)))
-	mdFull = goldmark.New(
-		goldmark.WithParser(parser.NewParser(
-			parser.WithBlockParsers(
-				// adapted from parser.DefaultBlockParsers(), with headings removed
-				util.Prioritized(parser.NewThematicBreakParser(), 200),
-				util.Prioritized(parser.NewListParser(), 300),
-				util.Prioritized(parser.NewListItemParser(), 400),
-				util.Prioritized(markdown.NewAnyIndentCodeBlockParser(), 500),
-				util.Prioritized(parser.NewFencedCodeBlockParser(), 700),
-				util.Prioritized(parser.NewBlockquoteParser(), 800),
-				util.Prioritized(parser.NewHTMLBlockParser(), 900),
-				util.Prioritized(parser.NewParagraphParser(), 1000),
-			),
-			parser.WithInlineParsers(append(
-				parser.DefaultInlineParsers(),
-				util.Prioritized(markdown.NewManpageLinkParser(), 1000),
-				util.Prioritized(markdown.NewBugLinkParser(), 1000),
-			)...),
-			parser.WithParagraphTransformers(parser.DefaultParagraphTransformers()...),
-		)),
-		goldmark.WithRendererOptions(html.WithUnsafe()),
-		goldmark.WithExtensions(extension.Linkify),
-	)
-	// htmlEntReplacer is a strings.Replacer that transform some HTML entities
-	// into their unicode representation.
-	htmlEntReplacer = strings.NewReplacer(
-		"&lowbar;", "_",
-		"&lt;", "<",
-		"&gt;", ">",
-		"&ast;", "*",
-	)
 )
 
 func rootRelPath(dir string) string {
@@ -209,28 +162,6 @@ func rootRelPath(dir string) string {
 		return "./"
 	}
 	return strings.Repeat("../", count)
-}
-
-func md2html(src string, ctx string, style mdStyle) template.HTML {
-	var err error
-	buf := bytes.Buffer{}
-	switch style {
-	case styleInline:
-		err = mdInline.Convert([]byte(src), &buf)
-	case styleFull:
-		// Lintian tags explanation have had their underscores (_) replaced by
-		// &lowbar; in lintian#d590cbf22, as well as some other special chars,
-		// to fix plain text CLI output. Unfortunately it causes problems when
-		// rendering markdown code blocks, so we simply replace them back, as
-		// they will be escaped as needed by goldmark.
-		src = htmlEntReplacer.Replace(src)
-		err = mdFull.Convert([]byte(src), &buf)
-	}
-	if err != nil {
-		log.Printf("WARNING: convert markdown %s: %v", err, ctx)
-		return template.HTML(src)
-	}
-	return template.HTML(buf.String())
 }
 
 func createTagFile(name string) (page string, file *os.File, err error) {

@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2024 Nicolas Peugnet <nicolas@club1.fr>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-package markdown_test
+package goldmark_ext_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/n-peugnet/lintian-ssg/markdown"
+	"github.com/n-peugnet/lintian-ssg/markdown/goldmark_ext"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/testutil"
@@ -16,7 +16,7 @@ import (
 
 func TestAnyIndentCodeBlock(t *testing.T) {
 	markdown := goldmark.New(goldmark.WithParser(parser.NewParser(parser.WithBlockParsers(
-		util.Prioritized(markdown.NewAnyIndentCodeBlockParser(), 500),
+		util.Prioritized(goldmark_ext.NewAnyIndentCodeBlockParser(), 500),
 		util.Prioritized(parser.NewParagraphParser(), 1000),
 	))))
 	cases := []struct {
