@@ -66,15 +66,15 @@ type Screen struct {
 	SeeAlso   []string `json:"see_also"`
 }
 
-func (s Screen) AdvocatesHTML() template.HTML {
+func (s *Screen) AdvocatesHTML() template.HTML {
 	return md2html(strings.Join(s.Advocates, ", "), "screen advocates", styleInline)
 }
 
-func (s Screen) ReasonHTML() template.HTML {
+func (s *Screen) ReasonHTML() template.HTML {
 	return md2html(s.Reason, "screen reason", styleFull)
 }
 
-func (s Screen) SeeAlsoHTML() template.HTML {
+func (s *Screen) SeeAlsoHTML() template.HTML {
 	return md2html("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also", styleInline)
 }
 
@@ -90,7 +90,23 @@ type Tag struct {
 	Screens        []Screen `json:"screens"`
 }
 
-func (t Tag) Source() string {
+func (t *Tag) ExplanationHTML() template.HTML {
+	return md2html(t.Explanation, "explanation", styleFull)
+}
+
+func (t *Tag) SeeAlsoHTML() []template.HTML {
+	seeAlsoHTML := make([]template.HTML, len(t.SeeAlso))
+	for i, str := range t.SeeAlso {
+		seeAlsoHTML[i] = md2html(str, fmt.Sprintf("reference %d", i), styleInline)
+	}
+	return seeAlsoHTML
+}
+
+func (t *Tag) RenamedFromStr() string {
+	return strings.Join(t.RenamedFrom, ", ")
+}
+
+func (t *Tag) Source() string {
 	name := t.Name
 	if !t.NameSpaced {
 		name = path.Join(string(name[0]), name)
@@ -115,12 +131,9 @@ type ManualTmplParams struct {
 }
 
 type TagTmplParams struct {
-	Tag
 	TmplParams
-	ExplanationHTML template.HTML
-	SeeAlsoHTML     []template.HTML
-	RenamedFromStr  string
-	PrevName        string
+	*Tag
+	PrevName string
 }
 
 type File struct {
@@ -220,20 +233,6 @@ func md2html(src string, ctx string, style mdStyle) template.HTML {
 	return template.HTML(buf.String())
 }
 
-func buildTmplParams(tag *Tag, params *TmplParams) *TagTmplParams {
-	tmplParams := &TagTmplParams{
-		Tag:            *tag,
-		TmplParams:     *params,
-		RenamedFromStr: strings.Join(tag.RenamedFrom, ", "),
-	}
-	tmplParams.ExplanationHTML = md2html(tag.Explanation, "explanation", styleFull)
-	tmplParams.SeeAlsoHTML = make([]template.HTML, len(tag.SeeAlso))
-	for i, str := range tag.SeeAlso {
-		tmplParams.SeeAlsoHTML[i] = md2html(str, fmt.Sprintf("reference %d", i), styleInline)
-	}
-	return tmplParams
-}
-
 func createTagFile(name string) (page string, file *os.File, err error) {
 	page = path.Join("tags", name+".html")
 	outPath := filepath.Join(outDir, page)
@@ -252,9 +251,12 @@ func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamed
 	}
 	defer file.Close()
 	pages <- page
-	tagParams := buildTmplParams(tag, params)
+	tagParams := TagTmplParams{
+		TmplParams: *params,
+		Tag:        tag,
+	}
 	tagParams.Root = rootRelPath(page)
-	if err := tagTmpl.Execute(file, tagParams); err != nil {
+	if err := tagTmpl.Execute(file, &tagParams); err != nil {
 		panic(err)
 	}
 	for _, name := range tag.RenamedFrom {
@@ -266,7 +268,7 @@ func renderTag(tag *Tag, params *TmplParams, tagTmpl *template.Template, renamed
 		pages <- page
 		tagParams.Root = rootRelPath(page)
 		tagParams.PrevName = name
-		if err := renamedTmpl.Execute(file, tagParams); err != nil {
+		if err := renamedTmpl.Execute(file, &tagParams); err != nil {
 			panic(err)
 		}
 	}
