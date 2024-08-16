@@ -47,9 +47,9 @@ import (
 )
 
 const (
-	outDir     = "out"
-	manualPath = "/usr/share/doc/lintian/lintian.html"
-	sourceURL  = "https://salsa.debian.org/lintian/lintian/-/blob/master/tags/"
+	outDir       = "out"
+	manualPath   = "/usr/share/doc/lintian/lintian.html"
+	sourceURLFmt = "https://salsa.debian.org/lintian/lintian/-/blob/%s/tags/%s.tag"
 )
 
 type mdStyle int
@@ -91,11 +91,11 @@ type Tag struct {
 }
 
 func (t Tag) Source() string {
-	name := t.Name + ".tag"
+	name := t.Name
 	if !t.NameSpaced {
 		name = path.Join(string(name[0]), name)
 	}
-	return path.Join(sourceURL, name)
+	return fmt.Sprintf(sourceURLFmt, t.LintianVersion, name)
 }
 
 type TmplParams struct {
