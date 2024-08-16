@@ -78,3 +78,21 @@ code.experimental {
 #see-also p {
 	margin: 0;
 }
+
+/* Lintian User's Manual specific styles */
+#lintian-user-s-manual {
+	/* Invert link hover styles for table of contents and headers */
+	h1, h2, h3, .contents {
+		a {
+			text-decoration: none;
+		}
+		a:hover {
+			text-decoration: underline;
+		}
+	}
+	/* Justify text */
+	p, dd, li {
+		hyphens: auto; /* to prevent overlong whitespaces when justifying */
+		text-align: justify;
+	}
+}
