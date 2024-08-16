@@ -4,7 +4,6 @@
 package lintian
 
 import (
-	_ "embed"
 	"fmt"
 	"html/template"
 	"path"
