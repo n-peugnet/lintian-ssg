@@ -49,6 +49,7 @@
 {{- range .SeeAlsoHTML }}
       <li>{{ . }}</li>
 {{- end }}
-      <li>List of <a href="https://udd.debian.org/lintian-tag.cgi?tag={{ .Name }}">all the affected packages</a>
+      <li>list of <a href="https://udd.debian.org/lintian-tag.cgi?tag={{ .Name }}">all the affected packages</a>
+      <li>the <a href="{{ .Source }}">source</a> of this tag</li>
     </ul>
 {{ end }}

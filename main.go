@@ -49,6 +49,7 @@ import (
 const (
 	outDir     = "out"
 	manualPath = "/usr/share/doc/lintian/lintian.html"
+	sourceURL  = "https://salsa.debian.org/lintian/lintian/-/blob/master/tags/"
 )
 
 type mdStyle int
@@ -79,6 +80,7 @@ func (s Screen) SeeAlsoHTML() template.HTML {
 
 type Tag struct {
 	Name           string   `json:"name"`
+	NameSpaced     bool     `json:"name_spaced"`
 	Visibility     string   `json:"visibility"`
 	Explanation    string   `json:"explanation"`
 	SeeAlso        []string `json:"see_also"`
@@ -86,6 +88,14 @@ type Tag struct {
 	Experimental   bool     `json:"experimental"`
 	LintianVersion string   `json:"lintian_version"`
 	Screens        []Screen `json:"screens"`
+}
+
+func (t Tag) Source() string {
+	name := t.Name + ".tag"
+	if !t.NameSpaced {
+		name = path.Join(string(name[0]), name)
+	}
+	return path.Join(sourceURL, name)
 }
 
 type TmplParams struct {
