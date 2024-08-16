@@ -68,11 +68,6 @@ type TagTmplParams struct {
 	PrevName string
 }
 
-type File struct {
-	name    string
-	content io.Reader
-}
-
 var (
 	//go:embed templates/index.html.tmpl
 	indexTmplStr string
@@ -150,30 +145,17 @@ func renderTag(tag *lintian.Tag, params *TmplParams, tagTmpl *template.Template,
 	}
 }
 
-func writeFile(name string, content io.Reader) error {
-	path := filepath.Join(outDir, name)
-	dir, _ := filepath.Split(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
-	}
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	if _, err := io.Copy(file, content); err != nil {
-		return err
-	}
-	return nil
-}
-
 func writeAssets() error {
-	for _, f := range []File{
+	files := []struct {
+		name    string
+		content io.Reader
+	}{
 		{"main.css", bytes.NewReader(mainCSS)},
 		{"openlogo-50.svg", bytes.NewReader(logoSVG)},
 		{"favicon.ico", bytes.NewReader(faviconICO)},
-	} {
-		if err := writeFile(f.name, f.content); err != nil {
+	}
+	for _, f := range files {
+		if err := ioutil.WriteFile(outDir, f.name, f.content); err != nil {
 			return err
 		}
 	}
@@ -220,7 +202,7 @@ func writeManual(tmpl *template.Template, params *TmplParams, path string, pages
 	if err := tmpl.Execute(&out, &manualParams); err != nil {
 		return err
 	}
-	return writeFile(path, &out)
+	return ioutil.WriteFile(outDir, path, &out)
 }
 
 func writeSimplePage(tmpl *template.Template, params TmplParams, path string, root string, pages chan<- string) error {
@@ -311,7 +293,7 @@ func main() {
 
 	listTagsJSON, err := json.Marshal(listTagsLines)
 	checkErr(err, "marshal listTagsLines:")
-	checkErr(writeFile("taglist.json", bytes.NewReader(listTagsJSON)), "write taglist:")
+	checkErr(ioutil.WriteFile(outDir, "taglist.json", bytes.NewReader(listTagsJSON)), "write taglist:")
 	checkErr(writeAssets(), "write assets:")
 	checkErr(writeManual(manualTmpl, &params, "manual/index.html", pagesChan), "write manual:")
 	checkErr(writeSimplePage(aboutTmpl, params, "about.html", "./", pagesChan), "write about.html:")

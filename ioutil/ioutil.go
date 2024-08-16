@@ -7,6 +7,8 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"os"
+	"path/filepath"
 )
 
 // BodyFilterReader is a io.Reader wrapper that returns only the content of the
@@ -66,4 +68,22 @@ func (r *BodyFilterReader) Read(buf []byte) (int, error) {
 		}
 	}
 	return count, nil
+}
+
+// WriteFile creates or override a file in outDir while creating required directories.
+func WriteFile(outDir string, name string, content io.Reader) error {
+	path := filepath.Join(outDir, name)
+	dir, _ := filepath.Split(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err := io.Copy(file, content); err != nil {
+		return err
+	}
+	return nil
 }
