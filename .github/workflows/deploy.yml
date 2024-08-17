@@ -27,7 +27,7 @@ jobs:
         with:
           depth: 0
       - name: Install system dependencies
-        run: apt-get update && apt-get install -y golang lintian
+        run: apt-get update && apt-get install -y --no-install-recommends git golang lintian
       - name: Install go dependencies
         run: go get
       - name: Build
