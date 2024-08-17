@@ -25,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          depth: 0
+          fetch-depth: 0
       - name: Install system dependencies
         run: apt-get update && apt-get install -y --no-install-recommends git golang lintian
       - name: Install go dependencies
