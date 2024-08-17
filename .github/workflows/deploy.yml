@@ -3,6 +3,8 @@ name: deploy
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: ["main"]
   schedule:
     - cron: '00 12 * * 3'
   # Allows you to run this workflow manually from the Actions tab
