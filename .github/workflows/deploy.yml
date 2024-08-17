@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Install system dependencies
         run: apt-get update && apt-get install -y --no-install-recommends git golang lintian
+      - name: Ignore dubious ownership warning
+        run: git config --system --add safe.directory '*'
       - name: Checkout
         uses: actions/checkout@v4
         with:
