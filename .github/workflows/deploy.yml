@@ -32,7 +32,7 @@ jobs:
         run: go get
       - name: Build
         run: |
-          go generate
+          #go generate
           go build
       - name: Run
         run: ./lintian-ssg --base-url=https://lintian.club1.fr/
