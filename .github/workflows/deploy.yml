@@ -22,18 +22,18 @@ jobs:
     runs-on: ubuntu-latest
     container: debian:testing
     steps:
+      - name: Install system dependencies
+        run: apt-get update && apt-get install -y --no-install-recommends git golang lintian
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install system dependencies
-        run: apt-get update && apt-get install -y --no-install-recommends git golang lintian
       - name: Install go dependencies
         run: go get
       - name: Build
         run: |
-          #go generate
-          go build
+          go generate
+          go build -v
       - name: Run
         run: ./lintian-ssg --base-url=https://lintian.club1.fr/
       - name: Upload artifact
