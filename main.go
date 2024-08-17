@@ -177,11 +177,10 @@ func writeSitemap(baseURL string, pages <-chan string, wg *sync.WaitGroup) error
 	return nil
 }
 
-func discardSitemap(pages <-chan string, wg *sync.WaitGroup) error {
+func discardSitemap(pages <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for range pages {
 	}
-	return nil
 }
 
 func writeManual(tmpl *template.Template, params *TmplParams, path string, pages chan<- string) error {
@@ -235,7 +234,9 @@ func main() {
 	if *flagBaseURL == "" || *flagNoSitemap {
 		go discardSitemap(pagesChan, &sitemapWG)
 	} else {
-		go writeSitemap(*flagBaseURL, pagesChan, &sitemapWG)
+		go func() {
+			checkErr(writeSitemap(*flagBaseURL, pagesChan, &sitemapWG), "write sitemap:")
+		}()
 	}
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
