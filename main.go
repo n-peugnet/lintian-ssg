@@ -227,6 +227,8 @@ func main() {
 	log.SetFlags(0)
 	flag.Parse()
 
+	checkErr(os.Mkdir(outDir, 0755), "create out dir:")
+
 	pagesChan := make(chan string, 32)
 	sitemapWG := sync.WaitGroup{}
 	sitemapWG.Add(1)
