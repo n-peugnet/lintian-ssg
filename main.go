@@ -42,7 +42,6 @@ import (
 )
 
 const (
-	outDir       = "out"
 	manualPath   = "/usr/share/doc/lintian/lintian.html"
 	sourceURLFmt = "https://salsa.debian.org/lintian/lintian/-/blob/%s/tags/%s.tag"
 )
@@ -94,6 +93,9 @@ var (
 		"located. This will be used to emit the canonical URL of each page and the sitemap."
 	flagNoSitemap     bool
 	flagNoSitemapHelp = "Disable sitemap.txt generation"
+	flagOutDir        string
+	flagOutDirHelp    = "Path of the directory where to output the generated website."
+	flagOutDirDef     = "out"
 	flagVersion       bool
 	flagVersionHelp   = "Show version and exit"
 
@@ -111,7 +113,7 @@ func rootRelPath(dir string) string {
 
 func createTagFile(name string) (page string, file *os.File, err error) {
 	page = path.Join("tags", name+".html")
-	outPath := filepath.Join(outDir, page)
+	outPath := filepath.Join(flagOutDir, page)
 	if err = os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
 		return
 	}
@@ -160,7 +162,7 @@ func writeAssets() error {
 		{"favicon.ico", bytes.NewReader(faviconICO)},
 	}
 	for _, f := range files {
-		if err := ioutil.WriteFile(outDir, f.name, f.content); err != nil {
+		if err := ioutil.WriteFile(flagOutDir, f.name, f.content); err != nil {
 			return err
 		}
 	}
@@ -169,7 +171,7 @@ func writeAssets() error {
 
 func writeSitemap(baseURL string, pages <-chan string, wg *sync.WaitGroup) error {
 	defer wg.Done()
-	file, err := os.Create(filepath.Join(outDir, "sitemap.txt"))
+	file, err := os.Create(filepath.Join(flagOutDir, "sitemap.txt"))
 	if err != nil {
 		return err
 	}
@@ -206,11 +208,11 @@ func writeManual(tmpl *template.Template, params *TmplParams, path string, pages
 	if err := tmpl.Execute(&out, &manualParams); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(outDir, path, &out)
+	return ioutil.WriteFile(flagOutDir, path, &out)
 }
 
 func writeSimplePage(tmpl *template.Template, params TmplParams, path string, root string, pages chan<- string) error {
-	file, err := os.Create(filepath.Join(outDir, path))
+	file, err := os.Create(filepath.Join(flagOutDir, path))
 	if err != nil {
 		return err
 	}
@@ -232,6 +234,8 @@ func main() {
 	log.SetFlags(0)
 	flag.StringVar(&flagBaseURL, "base-url", "", flagBaseURLHelp)
 	flag.BoolVar(&flagNoSitemap, "no-sitemap", false, flagNoSitemapHelp)
+	flag.StringVar(&flagOutDir, "o", flagOutDirDef, flagOutDirHelp)
+	flag.StringVar(&flagOutDir, "output-dir", flagOutDirDef, flagOutDirHelp)
 	flag.BoolVar(&flagVersion, "version", false, flagVersionHelp)
 	flag.Parse()
 
@@ -240,7 +244,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	checkErr(os.Mkdir(outDir, 0755), "create out dir:")
+	checkErr(os.Mkdir(flagOutDir, 0755), "create out dir:")
 
 	pagesChan := make(chan string, 32)
 	sitemapWG := sync.WaitGroup{}
@@ -309,7 +313,7 @@ func main() {
 
 	listTagsJSON, err := json.Marshal(listTagsLines)
 	checkErr(err, "marshal listTagsLines:")
-	checkErr(ioutil.WriteFile(outDir, "taglist.json", bytes.NewReader(listTagsJSON)), "write taglist:")
+	checkErr(ioutil.WriteFile(flagOutDir, "taglist.json", bytes.NewReader(listTagsJSON)), "write taglist:")
 	checkErr(writeAssets(), "write assets:")
 	checkErr(writeManual(manualTmpl, &params, "manual/index.html", pagesChan), "write manual:")
 	checkErr(writeSimplePage(aboutTmpl, params, "about.html", "./", pagesChan), "write about.html:")
