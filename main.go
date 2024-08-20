@@ -94,6 +94,7 @@ var (
 
 var (
 	flagBaseURL   string
+	flagHelp      bool
 	flagNoSitemap bool
 	flagOutDir    string
 	flagVersion   bool
@@ -102,6 +103,7 @@ var (
 const (
 	flagBaseURLHelp = `URL, including the scheme and final slash, where the root of the website will be
         located. This will be used to emit the canonical URL of each page and the sitemap.`
+	flagHelpHelp      = "Show this help and exit."
 	flagNoSitemapHelp = "Disable sitemap.txt generation."
 	flagOutDirHelp    = "Path of the directory where to output the generated website."
 	flagOutDirDef     = "out"
@@ -109,11 +111,17 @@ const (
 )
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `Usage of lintian-ssg:
+	var output io.Writer
+	if flagHelp {
+		output = os.Stdout
+	} else {
+		output = flag.CommandLine.Output()
+	}
+	fmt.Fprintf(output, `Usage of lintian-ssg:
   --base-url string
         %s
   -h, --help
-        Show this help and exit.
+        %s
   --no-sitemap
         %s
   -o, --output-dir string
@@ -122,6 +130,7 @@ func usage() {
         %s
 `,
 		flagBaseURLHelp,
+		flagHelpHelp,
 		flagNoSitemapHelp,
 		flagOutDirHelp, flagOutDirDef,
 		flagVersionHelp,
@@ -258,6 +267,8 @@ func checkErr(err error, msg ...any) {
 func main() {
 	log.SetFlags(0)
 	flag.StringVar(&flagBaseURL, "base-url", "", flagBaseURLHelp)
+	flag.BoolVar(&flagHelp, "h", false, flagHelpHelp)
+	flag.BoolVar(&flagHelp, "help", false, flagHelpHelp)
 	flag.BoolVar(&flagNoSitemap, "no-sitemap", false, flagNoSitemapHelp)
 	flag.StringVar(&flagOutDir, "o", flagOutDirDef, flagOutDirHelp)
 	flag.StringVar(&flagOutDir, "output-dir", flagOutDirDef, flagOutDirHelp)
@@ -265,6 +276,10 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	if flagHelp {
+		flag.Usage()
+		os.Exit(0)
+	}
 	if flagVersion {
 		fmt.Println(version)
 		os.Exit(0)
