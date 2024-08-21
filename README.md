@@ -7,14 +7,17 @@ currently hosted at <https://lintian.club1.fr/> as a demo.
 
 ## Build
 
+The only build requirement is Go >= `1.19`.
+
 ```sh
-sudo apt install golang lintian
 go generate   # to include lintian-ssg version, only from a git checkout
 go build
 go test ./... # optionally, to run tests
 ```
 
 ## Usage
+
+Lintian must be installed.
 
 ```
 Usage of lintian-ssg:
