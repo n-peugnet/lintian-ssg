@@ -285,7 +285,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	checkErr(os.Mkdir(flagOutDir, 0755), "create out dir:")
+	checkErr(os.MkdirAll(flagOutDir, 0755), "create out dir:")
 
 	pagesChan := make(chan string, 32)
 	sitemapWG := sync.WaitGroup{}
