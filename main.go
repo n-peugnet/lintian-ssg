@@ -210,24 +210,21 @@ func writeAssets() error {
 	return nil
 }
 
-func writeSitemap(baseURL string, pages <-chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
+func writeSitemap(baseURL string, pages []string) error {
 	file, err := os.Create(filepath.Join(flagOutDir, "sitemap.txt"))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer file.Close()
-	for page := range pages {
-		if _, err := file.WriteString(baseURL + page + "\n"); err != nil {
-			panic(err)
-		}
+	builder := strings.Builder{}
+	builder.Grow(len(pages) * 32)
+	for _, page := range pages {
+		builder.WriteString(baseURL + page + "\n")
 	}
-}
-
-func discardSitemap(pages <-chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for range pages {
+	if _, err := file.WriteString(builder.String()); err != nil {
+		return err
 	}
+	return nil
 }
 
 func writeManual(tmpl *template.Template, params *TmplParams, path string, pages chan<- string) error {
@@ -264,6 +261,20 @@ func writeSimplePage(tmpl *template.Template, params TmplParams, path string, ro
 	return tmpl.Execute(file, &params)
 }
 
+func handlePages(pages <-chan string, count *int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	s := make([]string, 0, 2048)
+	for page := range pages {
+		s = append(s, page)
+	}
+	if flagBaseURL != "" && !flagNoSitemap {
+		if err := writeSitemap(flagBaseURL, s); err != nil {
+			panic(err)
+		}
+	}
+	*count = len(s)
+}
+
 func checkErr(err error, msg ...any) {
 	if err != nil {
 		log.Fatalln(append(append([]any{"ERROR:"}, msg...), err)...)
@@ -295,14 +306,10 @@ func main() {
 	checkErr(os.MkdirAll(flagOutDir, 0755), "create out dir:")
 
 	pagesChan := make(chan string, 32)
-	sitemapWG := sync.WaitGroup{}
-	sitemapWG.Add(1)
-
-	if flagBaseURL == "" || flagNoSitemap {
-		go discardSitemap(pagesChan, &sitemapWG)
-	} else {
-		go writeSitemap(flagBaseURL, pagesChan, &sitemapWG)
-	}
+	pagesWG := sync.WaitGroup{}
+	pagesWG.Add(1)
+	var pagesCount int
+	go handlePages(pagesChan, &pagesCount, &pagesWG)
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
 	tagTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(tagTmplStr))
@@ -368,7 +375,7 @@ func main() {
 
 	tagsWG.Wait()
 	close(pagesChan)
-	sitemapWG.Wait()
+	pagesWG.Wait()
 	if err := jsonTagsCmd.Wait(); err != nil {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
@@ -381,11 +388,15 @@ func main() {
 	if flagStats {
 		usage := syscall.Rusage{}
 		checkErr(syscall.Getrusage(syscall.RUSAGE_SELF, &usage), "get resources usage:")
-		fmt.Printf(`tags list generation CPU time: %v
+		fmt.Printf(`number of tags: %d
+number of pages: %d
+tags list generation CPU time: %v
 tags json generation CPU time: %v
 website generation CPU time: %v
 total duration: %v
 `,
+			len(listTagsLines),
+			pagesCount,
 			(listTagsCmd.ProcessState.UserTime() + listTagsCmd.ProcessState.SystemTime()).Round(time.Millisecond),
 			(jsonTagsCmd.ProcessState.UserTime() + jsonTagsCmd.ProcessState.SystemTime()).Round(time.Millisecond),
 			time.Duration(usage.Utime.Nano()+usage.Stime.Nano()).Round(time.Millisecond),
