@@ -33,6 +33,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"syscall"
@@ -216,6 +217,7 @@ func writeSitemap(baseURL string, pages []string) error {
 		return err
 	}
 	defer file.Close()
+	sort.Strings(pages)
 	builder := strings.Builder{}
 	builder.Grow(len(pages) * 32)
 	for _, page := range pages {
