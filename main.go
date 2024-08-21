@@ -203,19 +203,18 @@ func writeAssets() error {
 	return nil
 }
 
-func writeSitemap(baseURL string, pages <-chan string, wg *sync.WaitGroup) error {
+func writeSitemap(baseURL string, pages <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	file, err := os.Create(filepath.Join(flagOutDir, "sitemap.txt"))
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer file.Close()
 	for page := range pages {
 		if _, err := file.WriteString(baseURL + page + "\n"); err != nil {
-			return err
+			panic(err)
 		}
 	}
-	return nil
 }
 
 func discardSitemap(pages <-chan string, wg *sync.WaitGroup) {
@@ -294,9 +293,7 @@ func main() {
 	if flagBaseURL == "" || flagNoSitemap {
 		go discardSitemap(pagesChan, &sitemapWG)
 	} else {
-		go func() {
-			checkErr(writeSitemap(flagBaseURL, pagesChan, &sitemapWG), "write sitemap:")
-		}()
+		go writeSitemap(flagBaseURL, pagesChan, &sitemapWG)
 	}
 
 	indexTmpl := template.Must(template.New("index").Parse(indexTmplStr))
