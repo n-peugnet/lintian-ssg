@@ -1,0 +1,21 @@
+<p>The <code>debian/rules</code> file for this package has an
+<code>override_dh_auto_test</code> target that does not appear to
+check <code>DEB_BUILD_OPTIONS</code> against <code>nocheck</code>.</p>
+<p>As this check is not automatically performed by <a href="https://manpages.debian.org/debhelper(1)">debhelper(1)</a>, the
+specified testsuite is run regardless of another maintainer using
+the <code>nocheck</code> build option.</p>
+<p>Please add a check such as:</p>
+<pre><code>override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+        ./run-upstream-testsuite
+endif
+</code></pre>
+<p>Lintian will ignore comments and other lines such as:</p>
+<pre><code># Disabled
+: Disabled
+echo &quot;Disabled&quot;
+mkdir foo/
+ENV=var dh_auto_test -- ARG=value
+</code></pre>
+<p>This check is not required in Debhelper compat level 13 or greater
+(see <a href="https://bugs.debian.org/568897">Bug#568897</a>).</p>
