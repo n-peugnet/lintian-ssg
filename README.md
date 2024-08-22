@@ -22,8 +22,8 @@ Lintian must be installed.
 ```
 Usage of lintian-ssg:
   --base-url string
-        URL, including the scheme and final slash, where the root of the website will be
-        located. This will be used to emit the canonical URL of each page and the sitemap.
+        URL, including the scheme, where the root of the website will be located.
+        This will be used in the sitemap and in the canonical URL of each page.
   -h, --help
         Show this help and exit.
   --no-sitemap
