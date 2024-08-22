@@ -43,6 +43,18 @@ func TestDataInline(t *testing.T) {
 			"# no header",
 			"<p># no header</p>",
 		},
+		{ // Leading space is ignored
+			" leading space",
+			"<p>leading space</p>",
+		},
+		{ // Parse explicit links
+			"<https://club1.fr>",
+			`<p><a href="https://club1.fr">https://club1.fr</a></p>`,
+		},
+		{ // Parse classic links
+			"[CLUB1](https://club1.fr)",
+			`<p><a href="https://club1.fr">CLUB1</a></p>`,
+		},
 	}
 	md := &dummyGoldmark{markdown.StyleInline}
 	for i, c := range cases {

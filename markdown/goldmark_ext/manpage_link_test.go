@@ -40,6 +40,14 @@ func TestManpageLink(t *testing.T) {
 			`see <code>lintian(1)</code>.`,
 			`<p>see <code><a href="https://manpages.debian.org/lintian(1)">lintian(1)</a></code>.</p>`,
 		},
+		{ // In link label
+			`[lintian(1)](http://another.url)`,
+			`<p><a href="http://another.url">lintian(1)</a></p>`,
+		},
+		{ // In link label with leading space
+			`[manual page lintian(1)](http://another.url)`,
+			`<p><a href="http://another.url">manual page lintian(1)</a></p>`,
+		},
 	}
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("case %d %s", i, c.src), func(t *testing.T) {

@@ -36,6 +36,14 @@ func TestBugLink(t *testing.T) {
 			`(Bug#12345)`,
 			`<p>(<a href="https://bugs.debian.org/12345">Bug#12345</a>)</p>`,
 		},
+		{ // In link label
+			`[Bug#12345](http://another.url)`,
+			`<p><a href="http://another.url">Bug#12345</a></p>`,
+		},
+		{ // In link label with leading space
+			`[see Bug#12345](http://another.url)`,
+			`<p><a href="http://another.url">see Bug#12345</a></p>`,
+		},
 	}
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("case %d %s", i, c.src), func(t *testing.T) {
