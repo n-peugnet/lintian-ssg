@@ -10,9 +10,9 @@ currently hosted at <https://lintian.club1.fr/> as a demo.
 The only build requirement is Go >= `1.19`.
 
 ```sh
-go generate   # to include lintian-ssg version, only from a git checkout
+go generate ./version # to include version, only from a git checkout
 go build
-go test ./... # optionally, to run tests
+go test ./...         # optionally, to run tests
 ```
 
 ## Usage
