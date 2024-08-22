@@ -28,11 +28,11 @@ func TestSource(t *testing.T) {
 	}
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("%d %s", i, c.expected), func(t *testing.T) {
+			expected := baseURL + c.expected
+			actual := c.tag.Source()
+			if actual != expected {
+				t.Fatalf("\nexpected: %q\nactual  : %q", expected, actual)
+			}
 		})
-		expected := baseURL + c.expected
-		actual := c.tag.Source()
-		if actual != expected {
-			t.Fatalf("\nexpected: %q\nactual  : %q", expected, actual)
-		}
 	}
 }
