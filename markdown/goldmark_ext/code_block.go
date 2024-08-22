@@ -18,8 +18,13 @@ const (
 	indentMax = 4
 )
 
+// anyIndentCodeBlock is a wrapped of ast.CodeBlock that allows to save the current indentation.
+type anyIndentCodeBlock struct {
+	ast.CodeBlock
+	indent int
+}
+
 type anyIndentCodeBlockParser struct {
-	currentIndent int
 }
 
 // NewAnyIndentCodeBlockParser returns a new BlockParser that
@@ -44,8 +49,10 @@ func (b *anyIndentCodeBlockParser) Open(parent ast.Node, reader text.Reader, pc 
 	if i < indentMin {
 		return nil, parser.NoChildren
 	}
-	b.currentIndent = i
-	node := ast.NewCodeBlock()
+	node := &anyIndentCodeBlock{
+		CodeBlock: *ast.NewCodeBlock(),
+		indent:    i,
+	}
 	reader.AdvanceAndSetPadding(pos, padding)
 	_, segment = reader.PeekLine()
 	// if code block line starts with a tab, keep a tab as it is.
@@ -59,12 +66,13 @@ func (b *anyIndentCodeBlockParser) Open(parent ast.Node, reader text.Reader, pc 
 }
 
 func (b *anyIndentCodeBlockParser) Continue(node ast.Node, reader text.Reader, pc parser.Context) parser.State {
+	cb := node.(*anyIndentCodeBlock)
 	line, segment := reader.PeekLine()
 	if util.IsBlank(line) {
-		node.Lines().Append(segment.TrimLeftSpaceWidth(b.currentIndent, reader.Source()))
+		node.Lines().Append(segment.TrimLeftSpaceWidth(cb.indent, reader.Source()))
 		return parser.Continue | parser.NoChildren
 	}
-	pos, padding := util.IndentPosition(line, reader.LineOffset(), b.currentIndent)
+	pos, padding := util.IndentPosition(line, reader.LineOffset(), cb.indent)
 	if pos < 0 {
 		return parser.Close
 	}
