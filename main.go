@@ -395,16 +395,22 @@ func main() {
 		checkErr(syscall.Getrusage(syscall.RUSAGE_SELF, &usage), "get resources usage:")
 		fmt.Printf(`number of tags: %d
 number of pages: %d
-tags list generation CPU time: %v
-tags json generation CPU time: %v
-website generation CPU time: %v
+tags list generation CPU time: %v (user: %v sys: %v)
+tags json generation CPU time: %v (user: %v sys: %v)
+website generation CPU time: %v (user: %v sys: %v)
 total duration: %v
 `,
 			len(listTagsLines),
 			pagesCount,
 			(listTagsCmd.ProcessState.UserTime() + listTagsCmd.ProcessState.SystemTime()).Round(time.Millisecond),
+			listTagsCmd.ProcessState.UserTime().Round(time.Millisecond),
+			listTagsCmd.ProcessState.SystemTime().Round(time.Millisecond),
 			(jsonTagsCmd.ProcessState.UserTime() + jsonTagsCmd.ProcessState.SystemTime()).Round(time.Millisecond),
+			jsonTagsCmd.ProcessState.UserTime().Round(time.Millisecond),
+			jsonTagsCmd.ProcessState.SystemTime().Round(time.Millisecond),
 			time.Duration(usage.Utime.Nano()+usage.Stime.Nano()).Round(time.Millisecond),
+			time.Duration(usage.Utime.Nano()).Round(time.Millisecond),
+			time.Duration(usage.Stime.Nano()).Round(time.Millisecond),
 			time.Now().Sub(start).Round(time.Millisecond),
 		)
 	}
