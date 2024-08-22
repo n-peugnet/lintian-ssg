@@ -105,8 +105,8 @@ var (
 )
 
 const (
-	flagBaseURLHelp = `URL, including the scheme and final slash, where the root of the website will be
-        located. This will be used to emit the canonical URL of each page and the sitemap.`
+	flagBaseURLHelp = `URL, including the scheme, where the root of the website will be located.
+        This will be used in the sitemap and in the canonical URL of each page.`
 	flagHelpHelp      = "Show this help and exit."
 	flagNoSitemapHelp = "Disable sitemap.txt generation."
 	flagOutDirHelp    = "Path of the directory where to output the generated website."
@@ -303,6 +303,9 @@ func main() {
 	if flagVersion {
 		fmt.Println(version)
 		os.Exit(0)
+	}
+	if flagBaseURL != "" && !strings.HasSuffix(flagBaseURL, "/") {
+		flagBaseURL += "/"
 	}
 
 	checkErr(os.MkdirAll(flagOutDir, 0755), "create out dir:")
