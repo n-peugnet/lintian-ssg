@@ -380,7 +380,6 @@ func main() {
 
 	tagsWG.Wait()
 	close(pagesChan)
-	pagesWG.Wait()
 	if err := jsonTagsCmd.Wait(); err != nil {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
@@ -390,6 +389,7 @@ func main() {
 		}
 	}
 
+	pagesWG.Wait()
 	if flagStats {
 		usage := syscall.Rusage{}
 		checkErr(syscall.Getrusage(syscall.RUSAGE_SELF, &usage), "get resources usage:")
