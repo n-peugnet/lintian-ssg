@@ -34,5 +34,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 'stable'
-      - name: Check
+      - name: Check code
         run: go vet ./...
+      - name: Check formatting
+        run: test -z "$(go fmt ./...)"
