@@ -37,4 +37,4 @@ jobs:
       - name: Check code
         run: go vet ./...
       - name: Check formatting
-        run: test -z "$(go fmt ./...)"
+        run: go fmt ./... && git diff --exit-code
