@@ -20,7 +20,7 @@ func TestAnyIndentCodeBlock(t *testing.T) {
 		util.Prioritized(parser.NewParagraphParser(), 1000),
 	))))
 	cases := []struct {
-		name string
+		name     string
 		src      string
 		expected string
 	}{
@@ -86,10 +86,10 @@ func TestAnyIndentCodeBlock(t *testing.T) {
 			testutil.DoTestCase(
 				markdown,
 				testutil.MarkdownTestCase{
-					No:       i,
+					No:          i,
 					Description: c.name,
-					Markdown: c.src,
-					Expected: c.expected,
+					Markdown:    c.src,
+					Expected:    c.expected,
 				},
 				t,
 			)

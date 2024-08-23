@@ -89,7 +89,7 @@ var (
 	//go:embed assets/favicon.ico
 	faviconICO []byte
 
-	start   = time.Now()
+	start = time.Now()
 )
 
 var (

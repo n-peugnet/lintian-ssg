@@ -54,7 +54,7 @@ func (r *BodyFilterReader) Read(buf []byte) (int, error) {
 		}
 		tmp, err := r.r.ReadBytes('\n')
 		if err != nil {
-			return count, err;
+			return count, err
 		}
 		if bytes.Equal(tmp, []byte("</body>\n")) {
 			r.closeTag = true
