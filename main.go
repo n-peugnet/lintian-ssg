@@ -142,6 +142,13 @@ func usage() {
 	)
 }
 
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
 func rootRelPath(dir string) string {
 	count := strings.Count(dir, "/")
 	if count == 0 {
@@ -227,7 +234,7 @@ func writeSitemap(baseURL string, pages []string) error {
 }
 
 func writeManual(tmpl *template.Template, params *TmplParams, path string, pages chan<- string) error {
-	file, err := os.Open(manualPath)
+	file, err := os.Open(getEnv("LINTIAN_MANUAL_PATH", manualPath))
 	if err != nil {
 		return err
 	}

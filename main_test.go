@@ -30,16 +30,27 @@ func setup(t *testing.T, lintianExplainTagsOutputs ...any) string {
 			t.Fatal(err)
 		}
 	}
+
+	// Setup bin directory
 	tmpDir := t.TempDir()
 	tmpBinDir := filepath.Join(tmpDir, "out")
 	checkErr(os.Mkdir(tmpBinDir, 0755))
-	file, err := os.Create(filepath.Join(tmpBinDir, "lintian-explain-tags"))
+	binFile, err := os.Create(filepath.Join(tmpBinDir, "lintian-explain-tags"))
 	checkErr(err)
-	defer file.Close()
-	checkErr(file.Chmod(0755))
-	_, err = fmt.Fprintf(file, lintianExplainTagsFmt, lintianExplainTagsOutputs...)
+	defer binFile.Close()
+	checkErr(binFile.Chmod(0755))
+	_, err = fmt.Fprintf(binFile, lintianExplainTagsFmt, lintianExplainTagsOutputs...)
 	checkErr(err)
 	t.Setenv("PATH", tmpBinDir+":"+os.Getenv("PATH"))
+
+	// Setup manual.html
+	manualPath := filepath.Join(tmpDir, "manual.html")
+	manualFile, err := os.Create(manualPath)
+	checkErr(err)
+	defer manualFile.Close()
+	_, err = manualFile.WriteString("MANUAL CONTENT")
+	checkErr(err)
+	t.Setenv("LINTIAN_MANUAL_PATH", manualPath)
 
 	// Reset command line flags
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
