@@ -276,11 +276,11 @@ func handlePages(pages <-chan string, count *int, wg *sync.WaitGroup) {
 
 func checkErr(err error, msg ...any) {
 	if err != nil {
-		log.Fatalln(append(append([]any{"ERROR:"}, msg...), err)...)
+		panic(fmt.Sprintln(append(append([]any{"ERROR:"}, msg...), err)...))
 	}
 }
 
-func main() {
+func Run() {
 	log.SetFlags(0)
 	flag.StringVar(&flagBaseURL, "base-url", "", flagBaseURLHelp)
 	flag.BoolVar(&flagHelp, "h", false, flagHelpHelp)
@@ -411,4 +411,13 @@ total duration: %v
 			time.Now().Sub(start).Round(time.Millisecond),
 		)
 	}
+}
+
+func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	Run()
 }
