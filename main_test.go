@@ -6,7 +6,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -56,10 +55,7 @@ func setup(t *testing.T, lintianExplainTagsOutputs ...any) fs.FS {
 
 	// Setup manual.html
 	manualPath := filepath.Join(tmpDir, "manual.html")
-	manualFile, err := os.Create(manualPath)
-	checkErr(err)
-	defer manualFile.Close()
-	_, err = manualFile.WriteString(lintianManual)
+	err = os.WriteFile(manualPath, []byte(lintianManual), 0644)
 	checkErr(err)
 	t.Setenv("LINTIAN_MANUAL_PATH", manualPath)
 
@@ -101,9 +97,7 @@ func assertContains(t *testing.T, outDir fs.FS, path string, contents []string) 
 			t.Fatal(err)
 		}
 	}
-	file, err := outDir.Open(path)
-	checkErr(err)
-	fileContent, err := io.ReadAll(file)
+	fileContent, err := fs.ReadFile(outDir, path)
 	checkErr(err)
 	for _, content := range contents {
 		i := bytes.Index(fileContent, []byte(content))
