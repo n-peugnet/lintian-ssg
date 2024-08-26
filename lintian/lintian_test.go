@@ -81,7 +81,7 @@ func TestUnmarshal(t *testing.T) {
 					"<https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html>",
 					"[Bug#954149](https://bugs.debian.org/954149)",
 				},
-				Visibility: "pedantic",
+				Visibility: lintian.LevelPedantic,
 			},
 		},
 	}

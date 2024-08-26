@@ -33,10 +33,20 @@ func (s *Screen) SeeAlsoHTML() template.HTML {
 	return markdown.ToHTML("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also", markdown.StyleInline)
 }
 
+type Level string
+
+const (
+	LevelError          Level = "error"
+	LevelWarning        Level = "warning"
+	LevelInfo           Level = "info"
+	LevelPedantic       Level = "pedantic"
+	LevelClassification Level = "classification"
+)
+
 type Tag struct {
 	Name           string   `json:"name"`
 	NameSpaced     bool     `json:"name_spaced"`
-	Visibility     string   `json:"visibility"`
+	Visibility     Level    `json:"visibility"`
 	Explanation    string   `json:"explanation"`
 	SeeAlso        []string `json:"see_also"`
 	RenamedFrom    []string `json:"renamed_from"`
