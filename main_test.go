@@ -3,6 +3,7 @@ package main_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -128,6 +129,52 @@ func TestBasic(t *testing.T) {
 	assertContains(t, outDir, "manual/index.html", []string{`MANUAL CONTENT`})
 	assertContains(t, outDir, "tags/test-tag.html", []string{`<p>This is a test.</p>`})
 	assertContains(t, outDir, "taglist.json", []string{`["test-tag"]`})
+}
+
+func TestBaseURL(t *testing.T) {
+	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
+		{
+			Name:           "test-tag",
+			NameSpaced:     false,
+			Visibility:     lintian.LevelInfo,
+			Explanation:    "This is a test.",
+			LintianVersion: lintianVersion,
+		},
+	})...)
+	os.Args = append(os.Args, "--base-url=https://lintian.club1.fr")
+	main.Run()
+
+	assertContains(t, outDir, "index.html", []string{`<link rel="canonical" href="https://lintian.club1.fr/index.html`})
+	assertContains(t, outDir, "manual/index.html", []string{`<link rel="canonical" href="https://lintian.club1.fr/manual/index.html`})
+	assertContains(t, outDir, "tags/test-tag.html", []string{`<link rel="canonical" href="https://lintian.club1.fr/tags/test-tag.html`})
+	assertContains(t, outDir, "sitemap.txt", []string{
+		"https://lintian.club1.fr/about.html",
+		"https://lintian.club1.fr/index.html",
+		"https://lintian.club1.fr/manual/index.html",
+		"https://lintian.club1.fr/tags/test-tag.html",
+	})
+}
+
+func TestNoSitemap(t *testing.T) {
+	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
+		{
+			Name:           "test-tag",
+			NameSpaced:     false,
+			Visibility:     lintian.LevelInfo,
+			Explanation:    "This is a test.",
+			LintianVersion: lintianVersion,
+		},
+	})...)
+	os.Args = append(os.Args, "--base-url=https://lintian.club1.fr", "--no-sitemap")
+	main.Run()
+
+	_, err := outDir.Open("sitemap.txt")
+	if err == nil {
+		t.Fatal("err should not be nil")
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Fatal("expected err to be ErrNotExist, got:", err)
+	}
 }
 
 func TestEmptyPATH(t *testing.T) {
