@@ -1,0 +1,42 @@
+{
+   "check" : "files/permissions/usr-lib",
+   "experimental" : true,
+   "explanation" : "The package ships an executable file in /usr/lib.\n\nPlease move the file to <code>/usr/libexec</code>.\n\nWith policy revision 4.1.5, Debian adopted the Filesystem\nHierarchy Specification (FHS) version 3.0.\n\nThe FHS 3.0 describes <code>/usr/libexec</code>. Please use that\nlocation for executables.",
+   "lintian_version" : "2.118.0",
+   "name" : "executable-in-usr-lib",
+   "name_spaced" : false,
+   "renamed_from" : [],
+   "screens" : [
+      {
+         "advocates" : [
+            "\"David Bremner\" <bremner@debian.org>"
+         ],
+         "name" : "emacs/elpa/scripts",
+         "reason" : "The <code>emacsen-common</code> package places installation\nand removal scripts, which for ELPA packages are executable,\nin the folder <code>/usr/lib/emacsen-common/packages</code>.\n\nAbout four hundred installation packages are affected. All of\nthem declare <code>emacsen-common</code> as an installation\nprerequisite.",
+         "see_also" : [
+            "[Bug#974175](https://bugs.debian.org/974175)",
+            "[Bug#954149](https://bugs.debian.org/954149)"
+         ]
+      },
+      {
+         "advocates" : [
+            "\"Andrius Merkys\" <merkys@debian.org>"
+         ],
+         "name" : "web/cgi/scripts",
+         "reason" : "The folder <code>/usr/lib/cgi-bin/</code> is designated for\nscripts in the Common Gateway Interface (CGI). They require the\nexecutable bit so the server can run them.",
+         "see_also" : [
+            "<https://en.wikipedia.org/wiki/Common_Gateway_Interface>",
+            "<https://datatracker.ietf.org/doc/html/rfc3875.html>",
+            "[Bug#1003941](https://bugs.debian.org/1003941)"
+         ]
+      }
+   ],
+   "see_also" : [
+      "[File System Structure](https://www.debian.org/doc/debian-policy/ch-opersys.html#file-system-structure) (Section 9.1.1) in the Debian Policy Manual",
+      "filesystem-hierarchy",
+      "<https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html>",
+      "[Bug#954149](https://bugs.debian.org/954149)"
+   ],
+   "show_always" : false,
+   "visibility" : "pedantic"
+}
