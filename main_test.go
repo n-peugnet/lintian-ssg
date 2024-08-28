@@ -148,6 +148,7 @@ func TestBasic(t *testing.T) {
 			Visibility:     lintian.LevelInfo,
 			Explanation:    "This is a test.",
 			LintianVersion: lintianVersion,
+			RenamedFrom:    []string{"previous-tag"},
 		},
 	})...)
 	main.Run()
@@ -155,6 +156,7 @@ func TestBasic(t *testing.T) {
 	assertContains(t, outDir, "index.html", `<a href="./tags/test-tag.html">test-tag</a>`)
 	assertContains(t, outDir, "manual/index.html", `MANUAL CONTENT`)
 	assertContains(t, outDir, "tags/test-tag.html", `<p>This is a test.</p>`)
+	assertContains(t, outDir, "tags/previous-tag.html", `<a href="../tags/test-tag.html"><code>test-tag</code></a>`)
 	assertContains(t, outDir, "taglist.json", `["test-tag"]`)
 }
 
@@ -166,6 +168,7 @@ func TestBaseURL(t *testing.T) {
 			Visibility:     lintian.LevelInfo,
 			Explanation:    "This is a test.",
 			LintianVersion: lintianVersion,
+			RenamedFrom:    []string{"previous-tag"},
 		},
 	})...)
 	os.Args = append(os.Args, "--base-url=https://lintian.club1.fr")
@@ -174,11 +177,13 @@ func TestBaseURL(t *testing.T) {
 	assertContains(t, outDir, "index.html", `<link rel="canonical" href="https://lintian.club1.fr/index.html`)
 	assertContains(t, outDir, "manual/index.html", `<link rel="canonical" href="https://lintian.club1.fr/manual/index.html`)
 	assertContains(t, outDir, "tags/test-tag.html", `<link rel="canonical" href="https://lintian.club1.fr/tags/test-tag.html`)
+	assertContains(t, outDir, "tags/previous-tag.html", `<link rel="canonical" href="https://lintian.club1.fr/tags/previous-tag.html`)
 	assertContains(t, outDir, "sitemap.txt",
 		"https://lintian.club1.fr/about.html",
 		"https://lintian.club1.fr/index.html",
 		"https://lintian.club1.fr/manual/index.html",
 		"https://lintian.club1.fr/tags/test-tag.html",
+		"https://lintian.club1.fr/tags/previous-tag.html",
 	)
 }
 
