@@ -1,6 +1,6 @@
 # Lintian SSG
 
-[![build][build-img]][build-url]
+[![build][build-img]][build-url] [![coverage][cover-img]][cover-url]
 
 A very simple static site generator to replace `lintian.debian.org`,
 currently hosted at <https://lintian.club1.fr/> as a demo.
@@ -64,3 +64,5 @@ location /tags/ {
 
 [build-img]: https://github.com/n-peugnet/lintian-ssg/actions/workflows/build.yml/badge.svg
 [build-url]: https://github.com/n-peugnet/lintian-ssg/actions/workflows/build.yml
+[cover-img]: https://codecov.io/gh/n-peugnet/lintian-ssg/graph/badge.svg?token=8RRU5MBX0V
+[cover-url]: https://codecov.io/gh/n-peugnet/lintian-ssg
