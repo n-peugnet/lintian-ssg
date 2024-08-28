@@ -41,6 +41,29 @@ func TestSource(t *testing.T) {
 	}
 }
 
+func TestSeeAlsoHTML(t *testing.T) {
+	tag := lintian.Tag{
+		SeeAlso: []string{
+			"[File System Structure](https://www.debian.org/doc/debian-policy/ch-opersys.html#file-system-structure) (Section 9.1.1) in the Debian Policy Manual",
+			"filesystem-hierarchy",
+			"<https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html>",
+			"[Bug#954149](https://bugs.debian.org/954149)",
+		},
+	}
+	expected := []string{
+		"<p><a href=\"https://www.debian.org/doc/debian-policy/ch-opersys.html#file-system-structure\">File System Structure</a> (Section 9.1.1) in the Debian Policy Manual</p>\n",
+		"<p>filesystem-hierarchy</p>\n",
+		"<p><ahref=\"https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html\">https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html</a></p>\n",
+		"<p><a href=\"https://bugs.debian.org/954149\">Bug#954149</a></p>\n",
+	}
+	actual := tag.SeeAlsoHTML()
+	for i, a := range actual {
+		if string(a) != expected[i] {
+			t.Errorf("\nexpected:\n%v actual:\n%v", expected[i], a)
+		}
+	}
+}
+
 func TestUnmarshal(t *testing.T) {
 	cases := []struct {
 		tag      string
