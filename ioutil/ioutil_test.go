@@ -150,3 +150,24 @@ func TestWriteFileBasic(t *testing.T) {
 		t.Fatalf("expected %q, got: %q", expected, actual)
 	}
 }
+
+func TestWriteFilePermissionDenied(t *testing.T) {
+	name := "test/file.txt"
+	outDir := t.TempDir()
+	if err := os.Chmod(outDir, 0400); err != nil {
+		t.Fatal(err)
+	}
+	content := bytes.NewBuffer([]byte("Hello world!\n"))
+	if err := ioutil.WriteFile(outDir, name, content); err == nil {
+		t.Fatal("expected error, got:", err)
+	}
+}
+
+func TestWriteFileTooLongName(t *testing.T) {
+	name := "test/veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryloooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooonnnnnnnnnnnngname.txt"
+	outDir := t.TempDir()
+	content := bytes.NewBuffer([]byte("Hello world!\n"))
+	if err := ioutil.WriteFile(outDir, name, content); err == nil {
+		t.Fatal("expected error, got:", err)
+	}
+}
