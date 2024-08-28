@@ -302,11 +302,11 @@ func Run() {
 
 	if flagHelp {
 		flag.Usage()
-		os.Exit(0)
+		return
 	}
 	if flagVersion {
 		fmt.Println(version.Number)
-		os.Exit(0)
+		return
 	}
 	if flagBaseURL != "" && !strings.HasSuffix(flagBaseURL, "/") {
 		flagBaseURL += "/"

@@ -14,6 +14,7 @@ import (
 
 	main "github.com/n-peugnet/lintian-ssg"
 	"github.com/n-peugnet/lintian-ssg/lintian"
+	"github.com/n-peugnet/lintian-ssg/version"
 )
 
 const lintianVersion = "1.118.0"
@@ -119,6 +120,25 @@ func assertContains(t *testing.T, outDir fs.FS, path string, contents ...string)
 	}
 }
 
+func getHelp(t *testing.T) string {
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	startMark := "```--help\n"
+	endMark := "```\n"
+	start := bytes.Index(readme, []byte(startMark))
+	if start == -1 {
+		t.Fatal("start mark not found in README.md:", startMark)
+	}
+	start += len(startMark)
+	end := bytes.Index(readme[start:], []byte(endMark))
+	if start == -1 {
+		t.Fatal("end mark not found in README.md:", endMark)
+	}
+	return string(readme[start:start+end])
+}
+
 func TestBasic(t *testing.T) {
 	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
 		{
@@ -181,6 +201,20 @@ func TestNoSitemap(t *testing.T) {
 	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatal("expected err to be ErrNotExist, got:", err)
 	}
+}
+
+func TestHelp(t *testing.T) {
+	outDir := setup(t)
+	os.Args = append(os.Args, "--help")
+	main.Run()
+	assertContains(t, outDir, ".stdout", getHelp(t))
+}
+
+func TestVersion(t *testing.T) {
+	outDir := setup(t)
+	os.Args = append(os.Args, "--version")
+	main.Run()
+	assertContains(t, outDir, ".stdout", version.Number)
 }
 
 func TestStats(t *testing.T) {

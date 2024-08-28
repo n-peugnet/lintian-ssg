@@ -19,7 +19,7 @@ go test ./...         # optionally, to run tests
 
 Lintian must be installed.
 
-```
+```--help
 Usage of lintian-ssg:
   --base-url string
         URL, including the scheme, where the root of the website will be located.
