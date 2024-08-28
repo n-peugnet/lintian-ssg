@@ -53,7 +53,7 @@ func TestSeeAlsoHTML(t *testing.T) {
 	expected := []string{
 		"<p><a href=\"https://www.debian.org/doc/debian-policy/ch-opersys.html#file-system-structure\">File System Structure</a> (Section 9.1.1) in the Debian Policy Manual</p>\n",
 		"<p>filesystem-hierarchy</p>\n",
-		"<p><ahref=\"https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html\">https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html</a></p>\n",
+		"<p><a href=\"https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html\">https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch04s07.html</a></p>\n",
 		"<p><a href=\"https://bugs.debian.org/954149\">Bug#954149</a></p>\n",
 	}
 	actual := tag.SeeAlsoHTML()
