@@ -136,7 +136,8 @@ func getHelp(t *testing.T) string {
 	if start == -1 {
 		t.Fatal("end mark not found in README.md:", endMark)
 	}
-	return string(readme[start:start+end])
+	end += start
+	return string(readme[start:end])
 }
 
 func TestBasic(t *testing.T) {
