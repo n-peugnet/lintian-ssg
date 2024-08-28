@@ -64,6 +64,18 @@ func setup(t *testing.T, lintianExplainTagsOutputs ...any) fs.FS {
 	// Reset CLI args, and add output dir
 	outDir := filepath.Join(tmpDir, "out")
 	os.Args = []string{os.Args[0], "-o", outDir}
+
+	// Store stdout and stderr
+	prevStdout := os.Stdout
+	os.Stdout, err = os.Create(filepath.Join(outDir, ".stdout"))
+	checkErr(err)
+	prevStderr := os.Stderr
+	os.Stderr, err = os.Create(filepath.Join(outDir, ".stderr"))
+	checkErr(err)
+	t.Cleanup(func() {
+		os.Stdout = prevStdout
+		os.Stderr = prevStderr
+	})
 	return os.DirFS(outDir)
 }
 
@@ -102,7 +114,7 @@ func assertContains(t *testing.T, outDir fs.FS, path string, contents []string) 
 	for _, content := range contents {
 		i := bytes.Index(fileContent, []byte(content))
 		if i == -1 {
-			t.Errorf("expected '%s' to be in %s, actual: %s", content, path, fileContent)
+			t.Errorf("expected '%s' to be in %s, actual:\n%s", content, path, fileContent)
 		}
 	}
 }
@@ -169,6 +181,28 @@ func TestNoSitemap(t *testing.T) {
 	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatal("expected err to be ErrNotExist, got:", err)
 	}
+}
+
+func TestStats(t *testing.T) {
+	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
+		{
+			Name:           "test-tag",
+			NameSpaced:     false,
+			Visibility:     lintian.LevelInfo,
+			Explanation:    "This is a test.",
+			LintianVersion: lintianVersion,
+		},
+	})...)
+	os.Args = append(os.Args, "--stats")
+	main.Run()
+	assertContains(t, outDir, ".stdout", []string{
+		"number of tags: 1",
+		"number of pages: 4",
+		"tags list generation CPU time: ",
+		"tags json generation CPU time: ",
+		"website generation CPU time: ",
+		"total duration: ",
+	})
 }
 
 func TestEmptyPATH(t *testing.T) {
