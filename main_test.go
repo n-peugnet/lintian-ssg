@@ -129,12 +129,12 @@ func getHelp(t *testing.T) string {
 	endMark := "```\n"
 	start := bytes.Index(readme, []byte(startMark))
 	if start == -1 {
-		t.Fatal("start mark not found in README.md:", startMark)
+		t.Fatalf("start mark not found in README.md: %q", startMark)
 	}
 	start += len(startMark)
 	end := bytes.Index(readme[start:], []byte(endMark))
-	if start == -1 {
-		t.Fatal("end mark not found in README.md:", endMark)
+	if end == -1 {
+		t.Fatalf("end mark not found in README.md: %q", endMark)
 	}
 	end += start
 	return string(readme[start:end])
