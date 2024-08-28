@@ -46,7 +46,7 @@ func TestBugLink(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		t.Run(fmt.Sprintf("case %d %s", i, c.src), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d %s", i, c.src), func(t *testing.T) {
 			testutil.DoTestCase(
 				markdown,
 				testutil.MarkdownTestCase{

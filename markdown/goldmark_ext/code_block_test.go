@@ -80,9 +80,29 @@ func TestAnyIndentCodeBlock(t *testing.T) {
 `,
 			"<pre><code>    code\nblock\n</code></pre>",
 		},
+		{
+			"Empty line in code block",
+			`
+	text
+
+	code
+	block
+`,
+			"<pre><code>text\n\ncode\nblock\n</code></pre>",
+		},
+		{
+			"leading text tab indent",
+			`
+text
+
+	code
+	block
+`,
+			"<p>text</p>\n<pre><code>code\nblock\n</code></pre>",
+		},
 	}
 	for i, c := range cases {
-		t.Run(fmt.Sprintf("case %d %s", i, c.name), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d %s", i, c.name), func(t *testing.T) {
 			testutil.DoTestCase(
 				markdown,
 				testutil.MarkdownTestCase{
