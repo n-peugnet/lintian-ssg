@@ -82,7 +82,7 @@ func WriteFile(outDir string, name string, content io.Reader) error {
 		return err
 	}
 	defer file.Close()
-	if _, err := io.Copy(file, content); err != nil {
+	if _, err := file.ReadFrom(content); err != nil {
 		return err
 	}
 	return nil

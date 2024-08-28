@@ -6,6 +6,8 @@ package ioutil_test
 import (
 	"bytes"
 	"io"
+	"io/fs"
+	"os"
 	"testing"
 
 	"github.com/n-peugnet/lintian-ssg/ioutil"
@@ -128,5 +130,23 @@ func TestFullRead(t *testing.T) {
 	}
 	if n != 0 {
 		t.Fatal("expected n == 0, got:", n)
+	}
+}
+
+func TestWriteFileBasic(t *testing.T) {
+	name := "test/file.txt"
+	expected := []byte("Hello world!\n")
+	outDir := t.TempDir()
+	content := bytes.NewBuffer(expected)
+	if err := ioutil.WriteFile(outDir, name, content); err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+	dirFS := os.DirFS(outDir)
+	actual, err := fs.ReadFile(dirFS, name)
+	if err != nil {
+		t.Fatal("unexpected error:", err)
+	}
+	if !bytes.Equal(expected, actual) {
+		t.Fatalf("expected %q, got: %q", expected, actual)
 	}
 }
