@@ -103,7 +103,7 @@ func expectPanic(t *testing.T, substr string, fn func()) {
 	fn()
 }
 
-func assertContains(t *testing.T, outDir fs.FS, path string, contents []string) {
+func assertContains(t *testing.T, outDir fs.FS, path string, contents ...string) {
 	checkErr := func(err error) {
 		if err != nil {
 			t.Fatal(err)
@@ -131,10 +131,10 @@ func TestBasic(t *testing.T) {
 	})...)
 	main.Run()
 
-	assertContains(t, outDir, "index.html", []string{`<a href="./tags/test-tag.html">test-tag</a>`})
-	assertContains(t, outDir, "manual/index.html", []string{`MANUAL CONTENT`})
-	assertContains(t, outDir, "tags/test-tag.html", []string{`<p>This is a test.</p>`})
-	assertContains(t, outDir, "taglist.json", []string{`["test-tag"]`})
+	assertContains(t, outDir, "index.html", `<a href="./tags/test-tag.html">test-tag</a>`)
+	assertContains(t, outDir, "manual/index.html", `MANUAL CONTENT`)
+	assertContains(t, outDir, "tags/test-tag.html", `<p>This is a test.</p>`)
+	assertContains(t, outDir, "taglist.json", `["test-tag"]`)
 }
 
 func TestBaseURL(t *testing.T) {
@@ -150,15 +150,15 @@ func TestBaseURL(t *testing.T) {
 	os.Args = append(os.Args, "--base-url=https://lintian.club1.fr")
 	main.Run()
 
-	assertContains(t, outDir, "index.html", []string{`<link rel="canonical" href="https://lintian.club1.fr/index.html`})
-	assertContains(t, outDir, "manual/index.html", []string{`<link rel="canonical" href="https://lintian.club1.fr/manual/index.html`})
-	assertContains(t, outDir, "tags/test-tag.html", []string{`<link rel="canonical" href="https://lintian.club1.fr/tags/test-tag.html`})
-	assertContains(t, outDir, "sitemap.txt", []string{
+	assertContains(t, outDir, "index.html", `<link rel="canonical" href="https://lintian.club1.fr/index.html`)
+	assertContains(t, outDir, "manual/index.html", `<link rel="canonical" href="https://lintian.club1.fr/manual/index.html`)
+	assertContains(t, outDir, "tags/test-tag.html", `<link rel="canonical" href="https://lintian.club1.fr/tags/test-tag.html`)
+	assertContains(t, outDir, "sitemap.txt",
 		"https://lintian.club1.fr/about.html",
 		"https://lintian.club1.fr/index.html",
 		"https://lintian.club1.fr/manual/index.html",
 		"https://lintian.club1.fr/tags/test-tag.html",
-	})
+	)
 }
 
 func TestNoSitemap(t *testing.T) {
@@ -195,14 +195,14 @@ func TestStats(t *testing.T) {
 	})...)
 	os.Args = append(os.Args, "--stats")
 	main.Run()
-	assertContains(t, outDir, ".stdout", []string{
+	assertContains(t, outDir, ".stdout",
 		"number of tags: 1",
 		"number of pages: 4",
 		"tags list generation CPU time: ",
 		"tags json generation CPU time: ",
 		"website generation CPU time: ",
 		"total duration: ",
-	})
+	)
 }
 
 func TestEmptyPATH(t *testing.T) {
