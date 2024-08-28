@@ -23,6 +23,25 @@ testdata6
 testdata7
 testdata8`)
 
+func TestEmptyBuf(t *testing.T) {
+	reader := &bytes.Buffer{}
+	filtered := ioutil.NewBodyFilterReader(reader)
+
+	buf := make([]byte, 32)
+
+	n, err := filtered.Read(buf)
+	if err != io.EOF {
+		t.Fatal("unexpected error: ", err)
+	}
+	if n != 0 {
+		t.Fatal("expected n == 0, got:", n)
+	}
+	expected := []byte{}
+	if !bytes.Equal(expected, buf[:n]) {
+		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
+	}
+}
+
 func TestSingleRead(t *testing.T) {
 	reader := bytes.NewReader(data)
 	filtered := ioutil.NewBodyFilterReader(reader)
@@ -39,6 +58,15 @@ func TestSingleRead(t *testing.T) {
 	expected := []byte("testdata3\ntestdata4\ntestdata5\n")
 	if !bytes.Equal(expected, buf[:n]) {
 		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
+	}
+
+	//following reads
+	n, err = filtered.Read(buf)
+	if err != io.EOF {
+		t.Fatal("unexpected error: ", err)
+	}
+	if n != 0 {
+		t.Fatal("expected n == 0, got:", n)
 	}
 }
 
@@ -93,7 +121,7 @@ func TestFullRead(t *testing.T) {
 		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
 	}
 
-	//next read
+	//following reads
 	n, err = filtered.Read(buf)
 	if err != io.EOF {
 		t.Fatal("unexpected error: ", err)
