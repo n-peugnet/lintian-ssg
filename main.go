@@ -39,6 +39,7 @@ import (
 
 	"github.com/n-peugnet/lintian-ssg/ioutil"
 	"github.com/n-peugnet/lintian-ssg/lintian"
+	"github.com/n-peugnet/lintian-ssg/markdown"
 	"github.com/n-peugnet/lintian-ssg/version"
 )
 
@@ -55,6 +56,7 @@ type TmplParams struct {
 	Root           string
 	Version        string
 	VersionLintian string
+	FooterHTML     template.HTML
 	TagList        []string
 }
 
@@ -94,6 +96,7 @@ var (
 
 var (
 	flagBaseURL   string
+	flagFooter    string
 	flagHelp      bool
 	flagNoSitemap bool
 	flagOutDir    string
@@ -104,6 +107,7 @@ var (
 const (
 	flagBaseURLHelp = `URL, including the scheme, where the root of the website will be located.
         This will be used in the sitemap and in the canonical URL of each page.`
+	flagFooterHelp    = "Text to add to the footer, inline Markdown elements will be parsed."
 	flagHelpHelp      = "Show this help and exit."
 	flagNoSitemapHelp = "Disable sitemap.txt generation."
 	flagOutDirHelp    = "Path of the directory where to output the generated website."
@@ -122,6 +126,8 @@ func usage() {
 	fmt.Fprintf(output, `Usage of lintian-ssg:
   --base-url string
         %s
+  --footer string
+        %s
   -h, --help
         %s
   --no-sitemap
@@ -134,6 +140,7 @@ func usage() {
         %s
 `,
 		flagBaseURLHelp,
+		flagFooterHelp,
 		flagHelpHelp,
 		flagNoSitemapHelp,
 		flagOutDirHelp, flagOutDirDef,
@@ -290,6 +297,7 @@ func checkErr(err error, msg ...any) {
 func Run() {
 	log.SetFlags(0)
 	flag.StringVar(&flagBaseURL, "base-url", "", flagBaseURLHelp)
+	flag.StringVar(&flagFooter, "footer", "", flagFooterHelp)
 	flag.BoolVar(&flagHelp, "h", false, flagHelpHelp)
 	flag.BoolVar(&flagHelp, "help", false, flagHelpHelp)
 	flag.BoolVar(&flagNoSitemap, "no-sitemap", false, flagNoSitemapHelp)
@@ -350,6 +358,7 @@ func Run() {
 		DateHuman:   date.Format(time.RFC1123),
 		DateMachine: date.Format(time.RFC3339),
 		Version:     version.Number,
+		FooterHTML:  markdown.ToHTML(flagFooter, "footer", markdown.StyleInline),
 		TagList:     listTagsLines,
 	}
 

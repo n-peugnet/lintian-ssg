@@ -24,6 +24,8 @@ Usage of lintian-ssg:
   --base-url string
         URL, including the scheme, where the root of the website will be located.
         This will be used in the sitemap and in the canonical URL of each page.
+  --footer string
+        Text to add to the footer, inline Markdown elements will be parsed.
   -h, --help
         Show this help and exit.
   --no-sitemap

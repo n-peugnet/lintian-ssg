@@ -75,6 +75,9 @@
       <br />
       Copyright © {{ block "copyright" . }}1998-{{ .DateYear }} <a href="https://salsa.debian.org/lintian/lintian">Lintian</a> authors{{ end }}
     </p>
+{{- if .FooterHTML }}
+    {{ .FooterHTML }}
+{{- end }}
   </div>
 
   <datalist id="lintian-tags-datalist"></datalist>
