@@ -55,6 +55,10 @@ func TestDataInline(t *testing.T) {
 			"[CLUB1](https://club1.fr)",
 			`<p><a href="https://club1.fr">CLUB1</a></p>`,
 		},
+		{ // Strip raw HTML
+			"strip <b>HTML</b>",
+			"<p>strip <!-- raw HTML omitted -->HTML<!-- raw HTML omitted --></p>",
+		},
 	}
 	md := &dummyGoldmark{markdown.StyleInline}
 	for i, c := range cases {
