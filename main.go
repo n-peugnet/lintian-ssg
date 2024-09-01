@@ -21,7 +21,6 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"html/template"
@@ -339,7 +338,7 @@ func Run() {
 	listTagsCmd := exec.Command("lintian-explain-tags", "--list-tags")
 	listTagsCmd.Stderr = os.Stderr
 	listTagsCmd.Stdout = &listTagsOut
-	checkErr(listTagsCmd.Run(), "list tags:")
+	checkErr(listTagsCmd.Run(), "lintian-explain-tags --list-tags:")
 	listTagsStr := strings.TrimSpace(listTagsOut.String())
 	listTagsLines := strings.Split(listTagsStr, "\n")
 
@@ -394,12 +393,7 @@ func Run() {
 	tagsWG.Wait()
 	close(pagesChan)
 	if err := jsonTagsCmd.Wait(); err != nil {
-		var exitError *exec.ExitError
-		if errors.As(err, &exitError) {
-			log.Println("WARNING: lintian-explain-tags returned non zero exit status:", exitError.ExitCode())
-		} else {
-			log.Println("ERROR: running lintian-explain-tags:", err)
-		}
+		log.Println("WARNING: lintian-explain-tags --format=json:", err)
 	}
 
 	pagesWG.Wait()

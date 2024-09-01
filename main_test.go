@@ -173,13 +173,13 @@ func TestBasic(t *testing.T) {
 
 func TestListTagsError(t *testing.T) {
 	setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{}, 1, 1)...)
-	expectPanic(t, "ERROR: list tags: exit status 1", main.Run)
+	expectPanic(t, "ERROR: lintian-explain-tags --list-tags: exit status 1", main.Run)
 }
 
 func TestJSONTagsError(t *testing.T) {
 	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{}, 0, 1)...)
 	main.Run()
-	assertContains(t, outDir, ".stderr", "WARNING: lintian-explain-tags returned non zero exit status: 1")
+	assertContains(t, outDir, ".stderr", "WARNING: lintian-explain-tags --format=json: exit status 1")
 }
 
 func TestBaseURL(t *testing.T) {
@@ -270,7 +270,7 @@ func TestStats(t *testing.T) {
 func TestEmptyPATH(t *testing.T) {
 	setup(t)
 	t.Setenv("PATH", "")
-	expectPanic(t, `ERROR: list tags: exec: "lintian-explain-tags"`, main.Run)
+	expectPanic(t, `ERROR: lintian-explain-tags --list-tags: exec: "lintian-explain-tags"`, main.Run)
 }
 
 func TestEmptyTagList(t *testing.T) {
