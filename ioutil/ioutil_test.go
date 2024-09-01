@@ -91,6 +91,23 @@ testdata6 testdata7 testdata8`)
 	assertRead(t, filtered, buf, "data5\n", io.EOF, "fourth read")
 }
 
+func TestBodyReaderTimeoutReader(t *testing.T) {
+	data := &bytes.Buffer{}
+	data.Write(make([]byte, 4070))
+	data.WriteString(`
+<body>
+testdata1
+testdata2
+</body>
+`)
+	reader := iotest.TimeoutReader(data)
+	filtered := ioutil.NewBodyFilterReaderSize(reader, 4096)
+
+	buf := make([]byte, 8)
+	assertRead(t, filtered, buf, "testdata", nil, "first read")
+	assertRead(t, filtered, buf, "1\n", iotest.ErrTimeout, "second read")
+}
+
 func TestWriteFileBasic(t *testing.T) {
 	name := "test/file.txt"
 	expected := []byte("Hello world!\n")

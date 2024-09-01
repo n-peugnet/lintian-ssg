@@ -27,6 +27,12 @@ func NewBodyFilterReader(reader io.Reader) *BodyFilterReader {
 	return &BodyFilterReader{r: bufio.NewReader(reader)}
 }
 
+// NewBodyFilterReaderSize returns a new BodyFilterReader whose buffer
+// has at least specified size.
+func NewBodyFilterReaderSize(reader io.Reader, size int) *BodyFilterReader {
+	return &BodyFilterReader{r: bufio.NewReaderSize(reader, size)}
+}
+
 func (r *BodyFilterReader) Read(buf []byte) (int, error) {
 	if r.closeTag {
 		return 0, io.EOF
