@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024 Nicolas Peugnet <nicolas@club1.fr>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 package main_test
 
 import (
@@ -171,6 +174,7 @@ func TestBasic(t *testing.T) {
 	assertContains(t, outDir, "tags/test-tag.html", `<p>This is a test.</p>`)
 	assertContains(t, outDir, "tags/previous-tag.html", `<a href="../tags/test-tag.html"><code>test-tag</code></a>`)
 	assertContains(t, outDir, "taglist.json", `["test-tag"]`)
+	assertContains(t, outDir, "main.css", "Main stylesheet for Lintian SSG generated website")
 }
 
 func TestListTagsError(t *testing.T) {

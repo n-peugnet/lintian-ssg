@@ -1,3 +1,10 @@
+/*
+ * Main stylesheet for Lintian SSG generated website
+ *
+ * SPDX-FileCopyrightText: 2024 Nicolas Peugnet <nicolas@club1.fr>
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /* Global layout */
 html, body {
 	height: 100%;
