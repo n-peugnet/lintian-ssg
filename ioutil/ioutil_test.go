@@ -26,16 +26,16 @@ testdata6
 testdata7
 testdata8`)
 
-func assertRead(t *testing.T, r io.Reader, buf []byte, expected string, expectedErr error) {
+func assertRead(t *testing.T, r io.Reader, buf []byte, expected string, expectedErr error, msg string) {
 	n, err := r.Read(buf)
 	if err != expectedErr {
-		t.Fatalf("unexpected err == %v, got: %v", expectedErr, err)
+		t.Fatalf("%s: unexpected err == %v, got: %v", msg, expectedErr, err)
 	}
 	if n != len(expected) {
-		t.Fatalf("expected n == %d, got: %v", len(expected), n)
+		t.Fatalf("%s: expected n == %d, got: %v", msg, len(expected), n)
 	}
 	if !bytes.Equal([]byte(expected), buf[:n]) {
-		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
+		t.Fatalf("%s: expected buf[:n] == %q, got: %q", msg, expected, buf[:n])
 	}
 }
 
@@ -44,7 +44,7 @@ func TestBodyReaderEmptyBuf(t *testing.T) {
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 32)
-	assertRead(t, filtered, buf, "", io.EOF)
+	assertRead(t, filtered, buf, "", io.EOF, "first read")
 }
 
 func TestBodyReaderSingleRead(t *testing.T) {
@@ -52,12 +52,8 @@ func TestBodyReaderSingleRead(t *testing.T) {
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 32)
-
-	// first read
-	assertRead(t, filtered, buf, "testdata3\ntestdata4\ntestdata5\n", io.EOF)
-
-	// following reads
-	assertRead(t, filtered, buf, "", io.EOF)
+	assertRead(t, filtered, buf, "testdata3\ntestdata4\ntestdata5\n", io.EOF, "first read")
+	assertRead(t, filtered, buf, "", io.EOF, "following read")
 }
 
 func TestBodyReaderTwoReads(t *testing.T) {
@@ -65,12 +61,8 @@ func TestBodyReaderTwoReads(t *testing.T) {
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 16)
-
-	// first read
-	assertRead(t, filtered, buf, "testdata3\ntestda", nil)
-
-	//second read
-	assertRead(t, filtered, buf, "ta4\ntestdata5\n", io.EOF)
+	assertRead(t, filtered, buf, "testdata3\ntestda", nil, "first read")
+	assertRead(t, filtered, buf, "ta4\ntestdata5\n", io.EOF, "second read")
 }
 
 func TestBodyReaderFullRead(t *testing.T) {
@@ -78,11 +70,8 @@ func TestBodyReaderFullRead(t *testing.T) {
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 30)
-
-	assertRead(t, filtered, buf, "testdata3\ntestdata4\ntestdata5\n", nil)
-
-	// following reads
-	assertRead(t, filtered, buf, "", io.EOF)
+	assertRead(t, filtered, buf, "testdata3\ntestdata4\ntestdata5\n", nil, "first read")
+	assertRead(t, filtered, buf, "", io.EOF, "following read")
 }
 
 func TestBodyReaderLongLines(t *testing.T) {
@@ -96,14 +85,10 @@ testdata6 testdata7 testdata8`)
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 8)
-	// first read
-	assertRead(t, filtered, buf, "testdata", nil)
-	// second read
-	assertRead(t, filtered, buf, "3 testda", nil)
-	// third read
-	assertRead(t, filtered, buf, "ta4 test", nil)
-	// third read
-	assertRead(t, filtered, buf, "data5\n", io.EOF)
+	assertRead(t, filtered, buf, "testdata", nil, "first read")
+	assertRead(t, filtered, buf, "3 testda", nil, "second read")
+	assertRead(t, filtered, buf, "ta4 test", nil, "third read")
+	assertRead(t, filtered, buf, "data5\n", io.EOF, "fourth read")
 }
 
 func TestWriteFileBasic(t *testing.T) {
