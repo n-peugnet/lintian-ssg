@@ -64,7 +64,9 @@ func setup(t *testing.T, lintianExplainTagsOutputs ...any) fs.FS {
 	t.Setenv("LINTIAN_MANUAL_PATH", manualPath)
 
 	// Reset command line flags
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.PanicOnError)
+	flag.CommandLine.Usage = func() { flag.Usage() }
+
 	// Reset CLI args, and add output dir
 	outDir := filepath.Join(tmpDir, "out")
 	os.Args = []string{os.Args[0], "-o", outDir}
@@ -229,6 +231,13 @@ func TestNoSitemap(t *testing.T) {
 	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatal("expected err to be ErrNotExist, got:", err)
 	}
+}
+
+func TestNonExistingFlag(t *testing.T) {
+	outDir := setup(t)
+	os.Args = append(os.Args, "--non-existing-flag")
+	expectPanic(t, "-non-existing-flag", main.Run)
+	assertContains(t, outDir, ".stderr", getHelp(t))
 }
 
 func TestHelp(t *testing.T) {
