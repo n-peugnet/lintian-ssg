@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,9 +26,11 @@ MANUAL CONTENT
 const lintianExplainTagsFmt = `#!/bin/sh
 if test "$1" = "--list-tags"
 then
-	echo %q
+	echo %[1]q
+	exit %[3]d
 else
-	echo %q
+	echo %[2]q
+	exit %[4]d
 fi
 `
 
@@ -73,6 +76,7 @@ func setup(t *testing.T, lintianExplainTagsOutputs ...any) fs.FS {
 	prevStderr := os.Stderr
 	os.Stderr, err = os.Create(filepath.Join(outDir, ".stderr"))
 	checkErr(err)
+	log.SetOutput(os.Stderr)
 	t.Cleanup(func() {
 		os.Stdout = prevStdout
 		os.Stderr = prevStderr
@@ -80,15 +84,22 @@ func setup(t *testing.T, lintianExplainTagsOutputs ...any) fs.FS {
 	return os.DirFS(outDir)
 }
 
-func buildSetupArgs(taglist []string, tags []lintian.Tag) (out []any) {
+func buildSetupArgs(taglist []string, tags []lintian.Tag, exitCodes ...int) []any {
 	var err error
-	out = make([]any, 2)
+	out := make([]any, 4)
 	out[0] = strings.Join(taglist, "\n") + "\n"
 	out[1], err = json.Marshal(tags)
 	if err != nil {
 		panic(err)
 	}
-	return
+	i := 0
+	for ; i < len(exitCodes); i++ {
+		out[i+2] = exitCodes[i]
+	}
+	for ; i < 2; i++ {
+		out[i+2] = 0
+	}
+	return out
 }
 
 func expectPanic(t *testing.T, substr string, fn func()) {
@@ -158,6 +169,17 @@ func TestBasic(t *testing.T) {
 	assertContains(t, outDir, "tags/test-tag.html", `<p>This is a test.</p>`)
 	assertContains(t, outDir, "tags/previous-tag.html", `<a href="../tags/test-tag.html"><code>test-tag</code></a>`)
 	assertContains(t, outDir, "taglist.json", `["test-tag"]`)
+}
+
+func TestListTagsError(t *testing.T) {
+	setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{}, 1, 1)...)
+	expectPanic(t, "ERROR: list tags: exit status 1", main.Run)
+}
+
+func TestJSONTagsError(t *testing.T) {
+	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{}, 0, 1)...)
+	main.Run()
+	assertContains(t, outDir, ".stderr", "WARNING: lintian-explain-tags returned non zero exit status: 1")
 }
 
 func TestBaseURL(t *testing.T) {
@@ -252,6 +274,6 @@ func TestEmptyPATH(t *testing.T) {
 }
 
 func TestEmptyTagList(t *testing.T) {
-	setup(t, "", "[]")
+	setup(t, "", "[]", 0, 0)
 	main.Run()
 }
