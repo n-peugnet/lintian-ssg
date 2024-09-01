@@ -25,113 +25,65 @@ testdata6
 testdata7
 testdata8`)
 
-func TestEmptyBuf(t *testing.T) {
-	reader := &bytes.Buffer{}
-	filtered := ioutil.NewBodyFilterReader(reader)
-
-	buf := make([]byte, 32)
-
-	n, err := filtered.Read(buf)
-	if err != io.EOF {
-		t.Fatal("unexpected error: ", err)
+func assertRead(t *testing.T, r io.Reader, buf []byte, expected string, expectedErr error) {
+	n, err := r.Read(buf)
+	if err != expectedErr {
+		t.Fatalf("unexpected err == %v, got: %v", expectedErr, err)
 	}
-	if n != 0 {
-		t.Fatal("expected n == 0, got:", n)
+	if n != len(expected) {
+		t.Fatalf("expected n == %d, got: %v", len(expected), n)
 	}
-	expected := []byte{}
-	if !bytes.Equal(expected, buf[:n]) {
+	if !bytes.Equal([]byte(expected), buf[:n]) {
 		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
 	}
 }
 
-func TestSingleRead(t *testing.T) {
+func TestBodyReaderEmptyBuf(t *testing.T) {
+	reader := &bytes.Buffer{}
+	filtered := ioutil.NewBodyFilterReader(reader)
+
+	buf := make([]byte, 32)
+	assertRead(t, filtered, buf, "", io.EOF)
+}
+
+func TestBodyReaderSingleRead(t *testing.T) {
 	reader := bytes.NewReader(data)
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 32)
 
-	n, err := filtered.Read(buf)
-	if err != io.EOF {
-		t.Fatal("unexpected error: ", err)
-	}
-	if n != 30 {
-		t.Fatal("expected n == 30, got:", n)
-	}
-	expected := []byte("testdata3\ntestdata4\ntestdata5\n")
-	if !bytes.Equal(expected, buf[:n]) {
-		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
-	}
+	// first read
+	assertRead(t, filtered, buf, "testdata3\ntestdata4\ntestdata5\n", io.EOF)
 
-	//following reads
-	n, err = filtered.Read(buf)
-	if err != io.EOF {
-		t.Fatal("unexpected error: ", err)
-	}
-	if n != 0 {
-		t.Fatal("expected n == 0, got:", n)
-	}
+	// following reads
+	assertRead(t, filtered, buf, "", io.EOF)
 }
 
-func TestTwoReads(t *testing.T) {
+func TestBodyReaderTwoReads(t *testing.T) {
 	reader := bytes.NewReader(data)
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 16)
 
 	// first read
-	n, err := filtered.Read(buf)
-	if err != nil {
-		t.Fatal("unexpected error: ", err)
-	}
-	if n != 16 {
-		t.Fatal("expected n == 16, got:", n)
-	}
-	expected := []byte("testdata3\ntestda")
-	if !bytes.Equal(expected, buf) {
-		t.Fatalf("expected buf == %q, got: %q", expected, buf)
-	}
+	assertRead(t, filtered, buf, "testdata3\ntestda", nil)
 
 	//second read
-	n, err = filtered.Read(buf)
-	if err != io.EOF {
-		t.Fatal("unexpected error: ", err)
-	}
-	if n != 14 {
-		t.Fatal("expected n == 14, got:", n)
-	}
-	expected = []byte("ta4\ntestdata5\n")
-	if !bytes.Equal(expected, buf[:n]) {
-		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
-	}
+	assertRead(t, filtered, buf, "ta4\ntestdata5\n", io.EOF)
 }
 
-func TestFullRead(t *testing.T) {
+func TestBodyReaderFullRead(t *testing.T) {
 	reader := bytes.NewReader(data)
 	filtered := ioutil.NewBodyFilterReader(reader)
 
 	buf := make([]byte, 30)
 
-	n, err := filtered.Read(buf)
-	if err != nil {
-		t.Fatal("unexpected error: ", err)
-	}
-	if n != 30 {
-		t.Fatal("expected n == 30, got:", n)
-	}
-	expected := []byte("testdata3\ntestdata4\ntestdata5\n")
-	if !bytes.Equal(expected, buf[:n]) {
-		t.Fatalf("expected buf[:n] == %q, got: %q", expected, buf[:n])
-	}
+	assertRead(t, filtered, buf, "testdata3\ntestdata4\ntestdata5\n", nil)
 
-	//following reads
-	n, err = filtered.Read(buf)
-	if err != io.EOF {
-		t.Fatal("unexpected error: ", err)
-	}
-	if n != 0 {
-		t.Fatal("expected n == 0, got:", n)
-	}
+	// following reads
+	assertRead(t, filtered, buf, "", io.EOF)
 }
+
 
 func TestWriteFileBasic(t *testing.T) {
 	name := "test/file.txt"
