@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"testing"
+	"testing/iotest"
 
 	"github.com/n-peugnet/lintian-ssg/ioutil"
 )
@@ -84,6 +85,26 @@ func TestBodyReaderFullRead(t *testing.T) {
 	assertRead(t, filtered, buf, "", io.EOF)
 }
 
+func TestBodyReaderLongLines(t *testing.T) {
+	data := []byte(`testdata0
+testdata1 testdata2
+<body>
+testdata3 testdata4 testdata5
+</body>
+testdata6 testdata7 testdata8`)
+	reader := bytes.NewReader(data)
+	filtered := ioutil.NewBodyFilterReader(reader)
+
+	buf := make([]byte, 8)
+	// first read
+	assertRead(t, filtered, buf, "testdata", nil)
+	// second read
+	assertRead(t, filtered, buf, "3 testda", nil)
+	// third read
+	assertRead(t, filtered, buf, "ta4 test", nil)
+	// third read
+	assertRead(t, filtered, buf, "data5\n", io.EOF)
+}
 
 func TestWriteFileBasic(t *testing.T) {
 	name := "test/file.txt"
@@ -121,5 +142,14 @@ func TestWriteFileTooLongName(t *testing.T) {
 	content := bytes.NewBuffer([]byte("Hello world!\n"))
 	if err := ioutil.WriteFile(outDir, name, content); err == nil {
 		t.Fatal("expected error, got:", err)
+	}
+}
+
+func TestWriteFileErrReader(t *testing.T) {
+	name := "test/file.txt"
+	outDir := t.TempDir()
+	err := ioutil.WriteFile(outDir, name, iotest.ErrReader(io.ErrUnexpectedEOF))
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("expected %v, got: %v", io.ErrUnexpectedEOF, err)
 	}
 }
