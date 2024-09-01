@@ -357,7 +357,7 @@ func Run() {
 		DateHuman:   date.Format(time.RFC1123),
 		DateMachine: date.Format(time.RFC3339),
 		Version:     version.Number,
-		FooterHTML:  markdown.ToHTML(flagFooter, "footer", markdown.StyleInline),
+		FooterHTML:  markdown.ToHTML(flagFooter, markdown.StyleInline),
 		TagList:     listTagsLines,
 	}
 

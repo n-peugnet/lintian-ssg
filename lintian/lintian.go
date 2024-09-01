@@ -22,15 +22,15 @@ type Screen struct {
 }
 
 func (s *Screen) AdvocatesHTML() template.HTML {
-	return markdown.ToHTML(strings.Join(s.Advocates, ", "), "screen advocates", markdown.StyleInline)
+	return markdown.ToHTML(strings.Join(s.Advocates, ", "), markdown.StyleInline)
 }
 
 func (s *Screen) ReasonHTML() template.HTML {
-	return markdown.ToHTML(s.Reason, "screen reason", markdown.StyleFull)
+	return markdown.ToHTML(s.Reason, markdown.StyleFull)
 }
 
 func (s *Screen) SeeAlsoHTML() template.HTML {
-	return markdown.ToHTML("See also: "+strings.Join(s.SeeAlso, ", "), "screen see_also", markdown.StyleInline)
+	return markdown.ToHTML("See also: "+strings.Join(s.SeeAlso, ", "), markdown.StyleInline)
 }
 
 type Level string
@@ -56,13 +56,13 @@ type Tag struct {
 }
 
 func (t *Tag) ExplanationHTML() template.HTML {
-	return markdown.ToHTML(t.Explanation, "explanation", markdown.StyleFull)
+	return markdown.ToHTML(t.Explanation, markdown.StyleFull)
 }
 
 func (t *Tag) SeeAlsoHTML() []template.HTML {
 	seeAlsoHTML := make([]template.HTML, len(t.SeeAlso))
 	for i, str := range t.SeeAlso {
-		seeAlsoHTML[i] = markdown.ToHTML(str, fmt.Sprintf("reference %d", i), markdown.StyleInline)
+		seeAlsoHTML[i] = markdown.ToHTML(str, markdown.StyleInline)
 	}
 	return seeAlsoHTML
 }

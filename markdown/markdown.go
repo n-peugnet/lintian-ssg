@@ -6,7 +6,6 @@ package markdown
 import (
 	"bytes"
 	"html/template"
-	"log"
 	"strings"
 
 	"github.com/n-peugnet/lintian-ssg/markdown/goldmark_ext"
@@ -62,7 +61,7 @@ const (
 	StyleFull
 )
 
-func ToHTML(src string, ctx string, style Style) template.HTML {
+func ToHTML(src string, style Style) template.HTML {
 	var err error
 	buf := bytes.Buffer{}
 	switch style {
@@ -78,8 +77,8 @@ func ToHTML(src string, ctx string, style Style) template.HTML {
 		err = mdFull.Convert([]byte(src), &buf)
 	}
 	if err != nil {
-		log.Printf("WARNING: convert markdown %s: %v", err, ctx)
-		return template.HTML(src)
+		// As we use a bytes.Buffer, goldmark.Convert should never return errors.
+		panic(err)
 	}
 	return template.HTML(buf.String())
 }

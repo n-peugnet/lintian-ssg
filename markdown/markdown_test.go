@@ -21,7 +21,7 @@ type dummyGoldmark struct {
 }
 
 func (g *dummyGoldmark) Convert(source []byte, writer io.Writer, opts ...parser.ParseOption) error {
-	html := markdown.ToHTML(string(source), "test", g.style)
+	html := markdown.ToHTML(string(source), g.style)
 	if _, err := writer.Write([]byte(html)); err != nil {
 		return err
 	}
