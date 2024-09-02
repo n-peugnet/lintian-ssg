@@ -1,3 +1,4 @@
+<!-- override_dh_auto_test-does-not-check-DEB_BUILD_OPTIONS (lintian v2.118.0) -->
 The <code>debian/rules</code> file for this package has an
 <code>override&lowbar;dh&lowbar;auto&lowbar;test</code> target that does not appear to
 check <code>DEB&lowbar;BUILD&lowbar;OPTIONS</code> against <code>nocheck</code>.

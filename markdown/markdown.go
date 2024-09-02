@@ -10,7 +10,6 @@ import (
 
 	"github.com/n-peugnet/lintian-ssg/markdown/goldmark_ext"
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/util"
@@ -42,7 +41,6 @@ var (
 			parser.WithParagraphTransformers(parser.DefaultParagraphTransformers()...),
 		)),
 		goldmark.WithRendererOptions(html.WithUnsafe()),
-		goldmark.WithExtensions(extension.Linkify),
 	)
 	// htmlEntReplacer is a strings.Replacer that transform some HTML entities
 	// into their unicode representation.
