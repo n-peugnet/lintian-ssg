@@ -157,7 +157,7 @@ func getHelp(t *testing.T) string {
 }
 
 func TestBasic(t *testing.T) {
-	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
+	outDir := setup(t, buildSetupArgs([]string{"test-tag", "nested/test/tag"}, []lintian.Tag{
 		{
 			Name:           "test-tag",
 			NameSpaced:     false,
@@ -166,11 +166,19 @@ func TestBasic(t *testing.T) {
 			LintianVersion: lintianVersion,
 			RenamedFrom:    []string{"previous-tag"},
 		},
+		{
+			Name:           "nested/test/tag",
+			NameSpaced:     true,
+			Visibility:     lintian.LevelError,
+			Explanation:    "This is a nested test.",
+			LintianVersion: lintianVersion,
+		},
 	})...)
 	main.Run()
 
 	assertContains(t, outDir, "index.html",
 		`<a href="./tags/test-tag.html">test-tag</a>`,
+		`<a href="./tags/nested/test/tag.html">nested/test/tag</a>`,
 		`<link rel="stylesheet" href="./main.css">`,
 	)
 	assertContains(t, outDir, "manual/index.html",
@@ -185,7 +193,11 @@ func TestBasic(t *testing.T) {
 		`<a href="../tags/test-tag.html"><code>test-tag</code></a>`,
 		`<link rel="stylesheet" href="../main.css">`,
 	)
-	assertContains(t, outDir, "taglist.json", `["test-tag"]`)
+	assertContains(t, outDir, "tags/nested/test/tag.html",
+		`<p>This is a nested test.</p>`,
+		`<link rel="stylesheet" href="../../../main.css">`,
+	)
+	assertContains(t, outDir, "taglist.json", `["test-tag","nested/test/tag"]`)
 	assertContains(t, outDir, "main.css", "Main stylesheet for Lintian SSG generated website")
 }
 
