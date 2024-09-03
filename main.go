@@ -47,7 +47,7 @@ const (
 	sourceURLFmt = "https://salsa.debian.org/lintian/lintian/-/blob/%s/tags/%s.tag"
 )
 
-type TmplParams struct {
+type tmplParams struct {
 	DateYear       int
 	DateHuman      string
 	DateMachine    string
@@ -59,13 +59,13 @@ type TmplParams struct {
 	TagList        []string
 }
 
-type ManualTmplParams struct {
-	TmplParams
+type manualTmplParams struct {
+	tmplParams
 	Manual template.HTML
 }
 
-type TagTmplParams struct {
-	TmplParams
+type tagTmplParams struct {
+	tmplParams
 	*lintian.Tag
 	PrevName string
 }
@@ -173,7 +173,7 @@ func createTagFile(name string) (page string, file *os.File, err error) {
 	return
 }
 
-func renderTag(tag *lintian.Tag, params *TmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, pages chan<- string, wg *sync.WaitGroup) {
+func renderTag(tag *lintian.Tag, params *tmplParams, tagTmpl *template.Template, renamedTmpl *template.Template, pages chan<- string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	page, file, err := createTagFile(tag.Name)
 	if err != nil {
@@ -181,8 +181,8 @@ func renderTag(tag *lintian.Tag, params *TmplParams, tagTmpl *template.Template,
 	}
 	defer file.Close()
 	pages <- page
-	tagParams := TagTmplParams{
-		TmplParams: *params,
+	tagParams := tagTmplParams{
+		tmplParams: *params,
 		Tag:        tag,
 	}
 	tagParams.Root = rootRelPath(page)
@@ -239,7 +239,7 @@ func writeSitemap(baseURL string, pages []string) error {
 	return nil
 }
 
-func writeManual(tmpl *template.Template, params *TmplParams, path string, pages chan<- string) error {
+func writeManual(tmpl *template.Template, params *tmplParams, path string, pages chan<- string) error {
 	file, err := os.Open(getEnv("LINTIAN_MANUAL_PATH", manualPath))
 	if err != nil {
 		return err
@@ -251,7 +251,7 @@ func writeManual(tmpl *template.Template, params *TmplParams, path string, pages
 		return err
 	}
 	pages <- path
-	manualParams := ManualTmplParams{*params, template.HTML(body.String())}
+	manualParams := manualTmplParams{*params, template.HTML(body.String())}
 	manualParams.Root = rootRelPath(path)
 	out := bytes.Buffer{}
 	if err := tmpl.Execute(&out, &manualParams); err != nil {
@@ -260,7 +260,7 @@ func writeManual(tmpl *template.Template, params *TmplParams, path string, pages
 	return ioutil.WriteFile(flagOutDir, path, &out)
 }
 
-func writeSimplePage(tmpl *template.Template, params TmplParams, path string, root string, pages chan<- string) error {
+func writeSimplePage(tmpl *template.Template, params tmplParams, path string, root string, pages chan<- string) error {
 	file, err := os.Create(filepath.Join(flagOutDir, path))
 	if err != nil {
 		return err
@@ -351,7 +351,7 @@ func Run() {
 	checkErr(jsonTagsCmd.Start())
 
 	date := time.Now().UTC()
-	params := TmplParams{
+	params := tmplParams{
 		BaseURL:     flagBaseURL,
 		DateYear:    date.Year(),
 		DateHuman:   date.Format(time.RFC1123),
