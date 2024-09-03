@@ -342,21 +342,12 @@ func Run() {
 	aboutTmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(aboutTmplStr))
 	e404Tmpl := template.Must(template.Must(indexTmpl.Clone()).Parse(e404TmplStr))
 
-	listTagsOut := strings.Builder{}
-	listTagsCmd := exec.Command("lintian-explain-tags", "--list-tags")
-	listTagsCmd.Stderr = os.Stderr
-	listTagsCmd.Stdout = &listTagsOut
-	checkErr(listTagsCmd.Run(), "lintian-explain-tags --list-tags:")
-	listTagsStr := strings.TrimSpace(listTagsOut.String())
-	listTagsLines := strings.Split(listTagsStr, "\n")
-
-	jsonTagsArgs := append([]string{"--format=json"}, listTagsLines...)
-	jsonTagsCmd := exec.Command("lintian-explain-tags", jsonTagsArgs...)
+	jsonTagsCmd := exec.Command("lintian-explain-tags", "--format=json")
 	jsonTagsCmd.Stderr = os.Stderr
 	jsonTagsOut, err := jsonTagsCmd.StdoutPipe()
 	checkErr(err)
 	jsonTagsDecoder := json.NewDecoder(jsonTagsOut)
-	checkErr(jsonTagsCmd.Start())
+	checkErr(jsonTagsCmd.Start(), "lintian-explain-tags --format=json:")
 
 	date := time.Now().UTC()
 	params := tmplParams{
@@ -367,6 +358,8 @@ func Run() {
 		Version:     version.Number,
 		FooterHTML:  markdown.ToHTML(flagFooter, markdown.StyleInline),
 	}
+
+	tagList := make([]string, 0, 2048)
 
 	// discard open bracket
 	_, err = jsonTagsDecoder.Token()
@@ -382,18 +375,19 @@ func Run() {
 		}
 		tagsWG.Add(1)
 		go renderTag(&tag, &params, tagTmpl, renamedTmpl, pagesChan, &tagsWG)
+		tagList = append(tagList, tag.Name)
 	}
 
 	// discard closing bracket
 	_, err = jsonTagsDecoder.Token()
 	checkErr(err)
 
-	listTagsJSON, err := json.Marshal(listTagsLines)
-	checkErr(err, "marshal listTagsLines:")
-	checkErr(ioutil.WriteFile(flagOutDir, "taglist.json", bytes.NewReader(listTagsJSON)), "write taglist:")
+	tagListJSON, err := json.Marshal(tagList)
+	checkErr(err, "marshal tagList:")
+	checkErr(ioutil.WriteFile(flagOutDir, "taglist.json", bytes.NewReader(tagListJSON)), "write taglist:")
 	checkErr(writeAssets(), "write assets:")
 	checkErr(writeManual(manualTmpl, &params, "manual/index.html", pagesChan), "write manual:")
-	indexParams := indexTmplParams{withRoot(params, "./"), listTagsLines}
+	indexParams := indexTmplParams{withRoot(params, "./"), tagList}
 	checkErr(writeSimplePage(indexTmpl, indexParams, "index.html", pagesChan), "write index.html:")
 	checkErr(writeSimplePage(aboutTmpl, withRoot(params, "./"), "about.html", pagesChan), "write about.html:")
 	checkErr(writeSimplePage(e404Tmpl, withRoot(params, "/"), "404.html", nil), "write 404.html:")
@@ -410,16 +404,12 @@ func Run() {
 		checkErr(syscall.Getrusage(syscall.RUSAGE_SELF, &usage), "get resources usage:")
 		fmt.Printf(`number of tags: %d
 number of pages: %d
-tags list generation CPU time: %v (user: %v sys: %v)
 tags json generation CPU time: %v (user: %v sys: %v)
 website generation CPU time: %v (user: %v sys: %v)
 total duration: %v
 `,
-			len(listTagsLines),
+			len(tagList),
 			pagesCount,
-			(listTagsCmd.ProcessState.UserTime() + listTagsCmd.ProcessState.SystemTime()).Round(time.Millisecond),
-			listTagsCmd.ProcessState.UserTime().Round(time.Millisecond),
-			listTagsCmd.ProcessState.SystemTime().Round(time.Millisecond),
 			(jsonTagsCmd.ProcessState.UserTime() + jsonTagsCmd.ProcessState.SystemTime()).Round(time.Millisecond),
 			jsonTagsCmd.ProcessState.UserTime().Round(time.Millisecond),
 			jsonTagsCmd.ProcessState.SystemTime().Round(time.Millisecond),

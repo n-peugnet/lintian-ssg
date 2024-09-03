@@ -201,11 +201,6 @@ func TestBasic(t *testing.T) {
 	assertContains(t, outDir, "main.css", "Main stylesheet for Lintian SSG generated website")
 }
 
-func TestListTagsError(t *testing.T) {
-	setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{}, 1, 1)...)
-	expectPanic(t, "ERROR: lintian-explain-tags --list-tags: exit status 1", main.Run)
-}
-
 func TestJSONTagsError(t *testing.T) {
 	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{}, 0, 1)...)
 	main.Run()
@@ -297,7 +292,6 @@ func TestStats(t *testing.T) {
 	assertContains(t, outDir, ".stdout",
 		"number of tags: 1",
 		"number of pages: 4",
-		"tags list generation CPU time: ",
 		"tags json generation CPU time: ",
 		"website generation CPU time: ",
 		"total duration: ",
@@ -307,7 +301,7 @@ func TestStats(t *testing.T) {
 func TestEmptyPATH(t *testing.T) {
 	setup(t)
 	t.Setenv("PATH", "")
-	expectPanic(t, `ERROR: lintian-explain-tags --list-tags: exec: "lintian-explain-tags"`, main.Run)
+	expectPanic(t, `ERROR: lintian-explain-tags --format=json: exec: "lintian-explain-tags"`, main.Run)
 }
 
 func TestEmptyTagList(t *testing.T) {
