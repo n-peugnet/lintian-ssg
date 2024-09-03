@@ -27,13 +27,11 @@ MANUAL CONTENT
 </body>
 `
 const lintianExplainTagsFmt = `#!/bin/sh
-if test "$1" = "--list-tags"
+if test "$1" = "--format=json"
 then
-	echo %[1]q
-	exit %[3]d
-else
+	# %[1]d workaround for https://github.com/golang/go/issues/45742
 	echo %[2]q
-	exit %[4]d
+	exit %[1]d
 fi
 `
 
@@ -89,20 +87,13 @@ func setup(t *testing.T, lintianExplainTagsOutputs ...any) fs.FS {
 	return os.DirFS(outDir)
 }
 
-func buildSetupArgs(taglist []string, tags []lintian.Tag, exitCodes ...int) []any {
+func buildSetupArgs(exitCode int, tags []lintian.Tag) []any {
 	var err error
-	out := make([]any, 4)
-	out[0] = strings.Join(taglist, "\n") + "\n"
+	out := make([]any, 2)
+	out[0] = exitCode
 	out[1], err = json.Marshal(tags)
 	if err != nil {
 		panic(err)
-	}
-	i := 0
-	for ; i < len(exitCodes); i++ {
-		out[i+2] = exitCodes[i]
-	}
-	for ; i < 2; i++ {
-		out[i+2] = 0
 	}
 	return out
 }
@@ -157,7 +148,7 @@ func getHelp(t *testing.T) string {
 }
 
 func TestBasic(t *testing.T) {
-	outDir := setup(t, buildSetupArgs([]string{"test-tag", "nested/test/tag"}, []lintian.Tag{
+	outDir := setup(t, buildSetupArgs(0, []lintian.Tag{
 		{
 			Name:           "test-tag",
 			NameSpaced:     false,
@@ -202,13 +193,13 @@ func TestBasic(t *testing.T) {
 }
 
 func TestJSONTagsError(t *testing.T) {
-	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{}, 0, 1)...)
+	outDir := setup(t, buildSetupArgs(1, []lintian.Tag{})...)
 	main.Run()
 	assertContains(t, outDir, ".stderr", "WARNING: lintian-explain-tags --format=json: exit status 1")
 }
 
 func TestBaseURL(t *testing.T) {
-	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
+	outDir := setup(t, buildSetupArgs(0, []lintian.Tag{
 		{
 			Name:           "test-tag",
 			NameSpaced:     false,
@@ -235,7 +226,7 @@ func TestBaseURL(t *testing.T) {
 }
 
 func TestNoSitemap(t *testing.T) {
-	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
+	outDir := setup(t, buildSetupArgs(0, []lintian.Tag{
 		{
 			Name:           "test-tag",
 			NameSpaced:     false,
@@ -278,7 +269,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestStats(t *testing.T) {
-	outDir := setup(t, buildSetupArgs([]string{"test-tag"}, []lintian.Tag{
+	outDir := setup(t, buildSetupArgs(0, []lintian.Tag{
 		{
 			Name:           "test-tag",
 			NameSpaced:     false,
@@ -305,6 +296,6 @@ func TestEmptyPATH(t *testing.T) {
 }
 
 func TestEmptyTagList(t *testing.T) {
-	setup(t, "", "[]", 0, 0)
+	setup(t, 0, "[]")
 	main.Run()
 }
