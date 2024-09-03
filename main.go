@@ -56,7 +56,11 @@ type tmplParams struct {
 	Version        string
 	VersionLintian string
 	FooterHTML     template.HTML
-	TagList        []string
+}
+
+type indexTmplParams struct {
+	tmplParams
+	TagList []string
 }
 
 type manualTmplParams struct {
@@ -260,7 +264,7 @@ func writeManual(tmpl *template.Template, params *tmplParams, path string, pages
 	return ioutil.WriteFile(flagOutDir, path, &out)
 }
 
-func writeSimplePage(tmpl *template.Template, params tmplParams, path string, root string, pages chan<- string) error {
+func writeSimplePage(tmpl *template.Template, params any, path string, pages chan<- string) error {
 	file, err := os.Create(filepath.Join(flagOutDir, path))
 	if err != nil {
 		return err
@@ -269,8 +273,7 @@ func writeSimplePage(tmpl *template.Template, params tmplParams, path string, ro
 	if pages != nil {
 		pages <- path
 	}
-	params.Root = root
-	return tmpl.Execute(file, &params)
+	return tmpl.Execute(file, params)
 }
 
 func handlePages(pages <-chan string, count *int, wg *sync.WaitGroup) {
@@ -285,6 +288,11 @@ func handlePages(pages <-chan string, count *int, wg *sync.WaitGroup) {
 		}
 	}
 	*count = len(s)
+}
+
+func withRoot(params tmplParams, root string) tmplParams {
+	params.Root = root
+	return params
 }
 
 func checkErr(err error, msg ...any) {
@@ -358,7 +366,6 @@ func Run() {
 		DateMachine: date.Format(time.RFC3339),
 		Version:     version.Number,
 		FooterHTML:  markdown.ToHTML(flagFooter, markdown.StyleInline),
-		TagList:     listTagsLines,
 	}
 
 	// discard open bracket
@@ -386,9 +393,10 @@ func Run() {
 	checkErr(ioutil.WriteFile(flagOutDir, "taglist.json", bytes.NewReader(listTagsJSON)), "write taglist:")
 	checkErr(writeAssets(), "write assets:")
 	checkErr(writeManual(manualTmpl, &params, "manual/index.html", pagesChan), "write manual:")
-	checkErr(writeSimplePage(aboutTmpl, params, "about.html", "./", pagesChan), "write about.html:")
-	checkErr(writeSimplePage(indexTmpl, params, "index.html", "./", pagesChan), "write index.html:")
-	checkErr(writeSimplePage(e404Tmpl, params, "404.html", "/", nil), "write 404.html:")
+	indexParams := indexTmplParams{withRoot(params, "./"), listTagsLines}
+	checkErr(writeSimplePage(indexTmpl, indexParams, "index.html", pagesChan), "write index.html:")
+	checkErr(writeSimplePage(aboutTmpl, withRoot(params, "./"), "about.html", pagesChan), "write about.html:")
+	checkErr(writeSimplePage(e404Tmpl, withRoot(params, "/"), "404.html", nil), "write 404.html:")
 
 	tagsWG.Wait()
 	close(pagesChan)
