@@ -169,10 +169,22 @@ func TestBasic(t *testing.T) {
 	})...)
 	main.Run()
 
-	assertContains(t, outDir, "index.html", `<a href="./tags/test-tag.html">test-tag</a>`)
-	assertContains(t, outDir, "manual/index.html", `MANUAL CONTENT`)
-	assertContains(t, outDir, "tags/test-tag.html", `<p>This is a test.</p>`)
-	assertContains(t, outDir, "tags/previous-tag.html", `<a href="../tags/test-tag.html"><code>test-tag</code></a>`)
+	assertContains(t, outDir, "index.html",
+		`<a href="./tags/test-tag.html">test-tag</a>`,
+		`<link rel="stylesheet" href="./main.css">`,
+	)
+	assertContains(t, outDir, "manual/index.html",
+		`MANUAL CONTENT`,
+		`<link rel="stylesheet" href="../main.css">`,
+	)
+	assertContains(t, outDir, "tags/test-tag.html",
+		`<p>This is a test.</p>`,
+		`<link rel="stylesheet" href="../main.css">`,
+	)
+	assertContains(t, outDir, "tags/previous-tag.html",
+		`<a href="../tags/test-tag.html"><code>test-tag</code></a>`,
+		`<link rel="stylesheet" href="../main.css">`,
+	)
 	assertContains(t, outDir, "taglist.json", `["test-tag"]`)
 	assertContains(t, outDir, "main.css", "Main stylesheet for Lintian SSG generated website")
 }
