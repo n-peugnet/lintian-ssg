@@ -5,7 +5,7 @@
 A very simple static site generator to replace `lintian.debian.org`,
 currently hosted at <https://lintian.club1.fr/> as a demo.
 
-Interesting examples includes [very-long-line-length-in-source-file] as it
+Interesting examples include [very-long-line-length-in-source-file] as it
 displays all fields and [override_dh_auto_test-does-not-check-DEB_BUILD_OPTIONS]
 for its rich markup.
 
