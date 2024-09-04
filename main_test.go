@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -34,6 +35,11 @@ then
 	exit %[1]d
 fi
 `
+
+// e is a shorthand for [regexp.QuoteMeta] which returns a string that escapes
+// all regular expression metacharacters inside the argument text;
+// the returned string is a regular expression matching the literal text.
+var e = regexp.QuoteMeta
 
 // setup creates a temporary directory that contains a "bin" dir with an
 // executable dummy "lintian-explain-tags" command which is then added in
@@ -111,18 +117,36 @@ func expectPanic(t *testing.T, substr string, fn func()) {
 	fn()
 }
 
-func assertContains(t *testing.T, outDir fs.FS, path string, contents ...string) {
+// assertContains verifies for each of the given needles that they are in
+// the content of the file (haystack) located at the given path in outDir.
+func assertContains(t *testing.T, outDir fs.FS, path string, needles ...string) {
+	content, err := fs.ReadFile(outDir, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, needle := range needles {
+		i := bytes.Index(content, []byte(needle))
+		if i == -1 {
+			t.Errorf("expected '%s' to be in %s, actual:\n%s", needle, path, content)
+		}
+	}
+}
+
+// assertRegexp verifies for each of the given expressions that they are
+// matching the content of the file located at the given path in outDir.
+func assertRegexp(t *testing.T, outDir fs.FS, path string, expressions ...string) {
 	checkErr := func(err error) {
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
-	fileContent, err := fs.ReadFile(outDir, path)
+	content, err := fs.ReadFile(outDir, path)
 	checkErr(err)
-	for _, content := range contents {
-		i := bytes.Index(fileContent, []byte(content))
-		if i == -1 {
-			t.Errorf("expected '%s' to be in %s, actual:\n%s", content, path, fileContent)
+	for _, expression := range expressions {
+		matched, err := regexp.Match(expression, content)
+		checkErr(err)
+		if !matched {
+			t.Errorf("expected %s to match '%s', actual:\n%s", path, expression, content)
 		}
 	}
 }
@@ -280,12 +304,12 @@ func TestStats(t *testing.T) {
 	})...)
 	os.Args = append(os.Args, "--stats")
 	main.Run()
-	assertContains(t, outDir, ".stdout",
-		"number of tags: 1",
-		"number of pages: 4",
-		"tags json generation CPU time: ",
-		"website generation CPU time: ",
-		"total duration: ",
+	assertRegexp(t, outDir, ".stdout",
+		e("number of tags: 1"),
+		e("number of pages: 4"),
+		`tags json generation CPU time: (\d.)?\d+m?s \(user: (\d.)?\d+m?s sys: (\d.)?\d+m?s\)`,
+		`website generation CPU time: (\d.)?\d+m?s \(user: (\d.)?\d+m?s sys: (\d.)?\d+m?s\)`,
+		`total duration: (\d.)?\d+m?s`,
 	)
 }
 
