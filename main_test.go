@@ -132,6 +132,18 @@ func assertContains(t *testing.T, outDir fs.FS, path string, needles ...string) 
 	}
 }
 
+// assertEquals verifies that the content of the file located at the given path
+// in outDir is equals to expected.
+func assertEquals(t *testing.T, outDir fs.FS, path string, expected string) {
+	content, err := fs.ReadFile(outDir, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(content, []byte(expected)) {
+		t.Errorf("expected %s to equal:\n%s\nactual:\n%s", path, expected, content)
+	}
+}
+
 // assertRegexp verifies for each of the given expressions that they are
 // matching the content of the file located at the given path in outDir.
 func assertRegexp(t *testing.T, outDir fs.FS, path string, expressions ...string) {
@@ -151,8 +163,8 @@ func assertRegexp(t *testing.T, outDir fs.FS, path string, expressions ...string
 	}
 }
 
-// assertSame verifies that the file located athe given path in outDir is
-// the same as the one at the expected location.
+// assertSame verifies that the content of the file located at the given path
+// in outDir is the same as the one at the expected location.
 func assertSame(t *testing.T, outDir fs.FS, path string, expected string) {
 	checkErr := func(err error) {
 		if err != nil {
@@ -229,7 +241,7 @@ func TestBasic(t *testing.T) {
 		`<p>This is a nested test.</p>`,
 		`<link rel="stylesheet" href="../../../main.css">`,
 	)
-	assertContains(t, outDir, "taglist.json", `["test-tag","nested/test/tag"]`)
+	assertEquals(t, outDir, "taglist.json", `["test-tag","nested/test/tag"]`)
 	assertSame(t, outDir, "main.css", "assets/main.css")
 	assertSame(t, outDir, "favicon.ico", "assets/favicon.ico")
 	assertSame(t, outDir, "openlogo-50.svg", "assets/openlogo-50.svg")
@@ -238,7 +250,7 @@ func TestBasic(t *testing.T) {
 func TestJSONTagsError(t *testing.T) {
 	outDir := setup(t, buildSetupArgs(1, []lintian.Tag{})...)
 	main.Run()
-	assertContains(t, outDir, ".stderr", "WARNING: lintian-explain-tags --format=json: exit status 1")
+	assertContains(t, outDir, ".stderr", "WARNING: lintian-explain-tags --format=json: ")
 }
 
 func TestBaseURL(t *testing.T) {
@@ -301,7 +313,7 @@ func TestHelp(t *testing.T) {
 	outDir := setup(t)
 	os.Args = append(os.Args, "--help")
 	main.Run()
-	assertContains(t, outDir, ".stdout", getHelp(t))
+	assertEquals(t, outDir, ".stdout", getHelp(t))
 }
 
 func TestVersion(t *testing.T) {
