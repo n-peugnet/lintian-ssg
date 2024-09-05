@@ -48,6 +48,12 @@ code {
 	font-size: 1.1em
 }
 
+pre {
+	border: 1px solid #DFDFE0;
+	padding: 1em;
+	background-color: #F5F6F7;
+}
+
 menu {
 	padding-left: 0;
 }
