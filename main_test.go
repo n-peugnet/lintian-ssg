@@ -151,6 +151,23 @@ func assertRegexp(t *testing.T, outDir fs.FS, path string, expressions ...string
 	}
 }
 
+// assertSame verifies that the file located athe given path in outDir is
+// the same as the one at the expected location.
+func assertSame(t *testing.T, outDir fs.FS, path string, expected string) {
+	checkErr := func(err error) {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	content, err := fs.ReadFile(outDir, path)
+	checkErr(err)
+	expectedContent, err := os.ReadFile(filepath.Clean(expected))
+	checkErr(err)
+	if !bytes.Equal(content, expectedContent) {
+		t.Errorf("expected %s to be the same as %s", path, expected)
+	}
+}
+
 func getHelp(t *testing.T) string {
 	readme, err := os.ReadFile("README.md")
 	if err != nil {
@@ -213,7 +230,9 @@ func TestBasic(t *testing.T) {
 		`<link rel="stylesheet" href="../../../main.css">`,
 	)
 	assertContains(t, outDir, "taglist.json", `["test-tag","nested/test/tag"]`)
-	assertContains(t, outDir, "main.css", "Main stylesheet for Lintian SSG generated website")
+	assertSame(t, outDir, "main.css", "assets/main.css")
+	assertSame(t, outDir, "favicon.ico", "assets/favicon.ico")
+	assertSame(t, outDir, "openlogo-50.svg", "assets/openlogo-50.svg")
 }
 
 func TestJSONTagsError(t *testing.T) {
