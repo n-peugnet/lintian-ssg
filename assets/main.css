@@ -63,8 +63,8 @@ menu > li {
 
 /* Colored tags header */
 h1 > code {
-	padding: .05em .2em;
-	line-height: 1.4em;
+	padding: .15em .25em;
+	line-height: 1.5em;
 	background-color: var(--bg-color)
 }
 
